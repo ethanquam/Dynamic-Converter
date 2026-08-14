@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#eceeed">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Dynamic Converter v1</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=2">
 </head>
 <body>
   <div class="app">
@@ -176,12 +176,14 @@
             <span class="btn-import-csv">Choose CSV file</span>
             <span id="distance-csv-file-name" class="csv-file-name">No file selected</span>
           </label>
-          <button type="button" id="distance-load-example" class="btn-load-example">
-            Load example data
-          </button>
-          <button type="button" id="distance-clear-data" class="btn-clear-data">
-            Clear data
-          </button>
+          <div class="csv-import-secondary">
+            <button type="button" id="distance-load-example" class="btn-panel-action">
+              Load example data
+            </button>
+            <button type="button" id="distance-clear-data" class="btn-panel-action btn-panel-action--muted">
+              Clear data
+            </button>
+          </div>
         </div>
         <p class="csv-import-hint">
           Export from SCS900 with coordinate order <strong>P, N, E, Z, D</strong>.
@@ -385,12 +387,14 @@
             <span class="btn-import-csv">Choose CSV file</span>
             <span id="csv-file-name" class="csv-file-name">No file selected</span>
           </label>
-          <button type="button" id="plane-load-example" class="btn-load-example">
-            Load example data
-          </button>
-          <button type="button" id="plane-clear-data" class="btn-clear-data">
-            Clear data
-          </button>
+          <div class="csv-import-secondary">
+            <button type="button" id="plane-load-example" class="btn-panel-action">
+              Load example data
+            </button>
+            <button type="button" id="plane-clear-data" class="btn-panel-action btn-panel-action--muted">
+              Clear data
+            </button>
+          </div>
         </div>
         <p class="csv-import-hint">
           Export from SCS900 with coordinate order <strong>P, N, E, Z, D</strong>.

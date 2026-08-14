@@ -24,13 +24,23 @@ if (!window.Units || !window.CsvImport) {
   if (!view3dContainer || !assignmentBody) {
     console.error("Plane grade UI elements missing.");
   } else {
-    const view3d = createPlaneView3d(view3dContainer, view3dPlaceholder, {
-      panel: document.getElementById("plane-view3d-panel"),
-      showMeasurementsInput: document.getElementById("plane-show-measurements"),
-      zoomExtentsBtn: document.getElementById("plane-zoom-extents"),
-      resetViewBtn: document.getElementById("reset-view3d"),
-      fullscreenBtn: document.getElementById("plane-fullscreen"),
-    });
+    let view3d;
+    try {
+      view3d = createPlaneView3d(view3dContainer, view3dPlaceholder, {
+        panel: document.getElementById("plane-view3d-panel"),
+        showMeasurementsInput: document.getElementById("plane-show-measurements"),
+        zoomExtentsBtn: document.getElementById("plane-zoom-extents"),
+        resetViewBtn: document.getElementById("reset-view3d"),
+        fullscreenBtn: document.getElementById("plane-fullscreen"),
+      });
+    } catch (error) {
+      console.error("Plane 3D view failed to initialize:", error);
+      view3d = {
+        update: () => {},
+        resetCamera: () => {},
+        setScaleFormatter: () => {},
+      };
+    }
 
     function syncView3dScale() {
       view3d.setScaleFormatter((meters) => formatUnitValue(meters, planeUnitsSelect.value));

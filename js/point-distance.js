@@ -36,13 +36,23 @@ if (!window.Units || !window.CsvImport) {
   if (!assignmentBody || !view3dContainer) {
     console.error("Point distance UI elements missing.");
   } else {
-    const view3d = createDistanceView3d(view3dContainer, view3dPlaceholder, {
-      panel: document.getElementById("distance-view3d-panel"),
-      showMeasurementsInput: document.getElementById("distance-show-measurements"),
-      zoomExtentsBtn: document.getElementById("distance-zoom-extents"),
-      resetViewBtn: document.getElementById("reset-distance-view3d"),
-      fullscreenBtn: document.getElementById("distance-fullscreen"),
-    });
+    let view3d;
+    try {
+      view3d = createDistanceView3d(view3dContainer, view3dPlaceholder, {
+        panel: document.getElementById("distance-view3d-panel"),
+        showMeasurementsInput: document.getElementById("distance-show-measurements"),
+        zoomExtentsBtn: document.getElementById("distance-zoom-extents"),
+        resetViewBtn: document.getElementById("reset-distance-view3d"),
+        fullscreenBtn: document.getElementById("distance-fullscreen"),
+      });
+    } catch (error) {
+      console.error("Distance 3D view failed to initialize:", error);
+      view3d = {
+        update: () => {},
+        resetCamera: () => {},
+        setScaleFormatter: () => {},
+      };
+    }
 
     function syncView3dScale() {
       view3d.setScaleFormatter((meters) => formatUnitValue(meters, coordUnitsSelect.value));

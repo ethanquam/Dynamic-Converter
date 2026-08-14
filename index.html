@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#eceeed">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Dynamic Converter v1</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-text">
+        <h1>Dynamic Distance Converter</h1>
+        <p class="subtitle">Enter any format — all others update instantly.</p>
+      </div>
+      <div class="precision-control">
+        <label for="precision">Fraction precision</label>
+        <select id="precision">
+          <option value="2">1/2″</option>
+          <option value="4">1/4″</option>
+          <option value="8">1/8″</option>
+          <option value="16" selected>1/16″</option>
+          <option value="32">1/32″</option>
+          <option value="64">1/64″</option>
+        </select>
+      </div>
+    </header>
+
+    <nav class="app-nav" aria-label="Jump to section">
+      <a class="app-nav-link" href="#converter-grid">Length</a>
+      <a class="app-nav-link" href="#volume-converter-heading">Volume</a>
+      <a class="app-nav-link" href="#point-distance-heading">Distance</a>
+      <a class="app-nav-link" href="#plane-grade-heading">Plane</a>
+    </nav>
+
+    <main class="converter-grid" id="converter-grid">
+      <section class="measure-row" data-field="meters">
+        <div class="measure-label">
+          <span class="measure-name">Meters</span>
+          <span class="measure-hint">Decimal</span>
+        </div>
+        <div class="measure-input-wrap">
+          <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                 id="input-meters" aria-label="Meters">
+          <span class="unit">m</span>
+        </div>
+      </section>
+
+      <section class="measure-row" data-field="surveyFeet">
+        <div class="measure-label">
+          <span class="measure-name">US Survey Feet</span>
+          <span class="measure-hint">Decimal · 1 ft = 1200/3937 m</span>
+        </div>
+        <div class="measure-input-wrap">
+          <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                 id="input-survey-feet" aria-label="US Survey Feet">
+          <span class="unit">ft (US)</span>
+        </div>
+      </section>
+
+      <section class="measure-row" data-field="intlFeet">
+        <div class="measure-label">
+          <span class="measure-name">International Feet</span>
+          <span class="measure-hint">Decimal · 1 ft = 0.3048 m</span>
+        </div>
+        <div class="measure-input-wrap">
+          <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                 id="input-intl-feet" aria-label="International Feet">
+          <span class="unit">ft (Intl)</span>
+        </div>
+      </section>
+
+      <section class="measure-row" data-field="ftInFraction">
+        <div class="measure-label">
+          <span class="measure-name">Feet · Inches · Fraction</span>
+          <span class="measure-hint">Carpenter format · based on international foot</span>
+        </div>
+        <div class="measure-input-wrap">
+          <input type="text" autocomplete="off" spellcheck="false"
+                 id="input-ft-in" aria-label="Feet inches fraction"
+                 placeholder="e.g. 12&#39;-6 1/2&quot; or 12-6 1/2">
+          <span class="unit">ft′ in″</span>
+        </div>
+      </section>
+
+      <section class="measure-row" data-field="decimalInches">
+        <div class="measure-label">
+          <span class="measure-name">Decimal Inches</span>
+          <span class="measure-hint">International inch</span>
+        </div>
+        <div class="measure-input-wrap">
+          <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                 id="input-decimal-inches" aria-label="Decimal inches">
+          <span class="unit">in</span>
+        </div>
+      </section>
+    </main>
+
+    <section class="volume-converter-section" aria-labelledby="volume-converter-heading">
+      <div class="section-header">
+        <div>
+          <h2 id="volume-converter-heading">Dynamic Volume Converter</h2>
+          <p class="section-subtitle">Enter any unit — all others update instantly.</p>
+        </div>
+      </div>
+
+      <div class="converter-grid" id="volume-converter-grid">
+        <section class="measure-row" data-field="cubicMeters">
+          <div class="measure-label">
+            <span class="measure-name">Cubic Meters</span>
+            <span class="measure-hint">Decimal</span>
+          </div>
+          <div class="measure-input-wrap">
+            <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                   id="input-cu-meters" aria-label="Cubic meters">
+            <span class="unit">m³</span>
+          </div>
+        </section>
+
+        <section class="measure-row" data-field="cubicFeet">
+          <div class="measure-label">
+            <span class="measure-name">Cubic Feet</span>
+            <span class="measure-hint">Decimal</span>
+          </div>
+          <div class="measure-input-wrap">
+            <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                   id="input-cu-feet" aria-label="Cubic feet">
+            <span class="unit">ft³</span>
+          </div>
+        </section>
+
+        <section class="measure-row" data-field="cubicYards">
+          <div class="measure-label">
+            <span class="measure-name">Cubic Yards</span>
+            <span class="measure-hint">Decimal · 1 yd³ = 27 ft³</span>
+          </div>
+          <div class="measure-input-wrap">
+            <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                   id="input-cu-yards" aria-label="Cubic yards">
+            <span class="unit">yd³</span>
+          </div>
+        </section>
+      </div>
+
+      <p id="volume-status-line" class="status-line" hidden></p>
+    </section>
+
+    <section class="point-distance-section" aria-labelledby="point-distance-heading">
+      <div class="section-header">
+        <div>
+          <h2 id="point-distance-heading">Point-to-Point Distance</h2>
+          <p class="section-subtitle">
+            Import measured points, choose two for distance, or optionally project onto a vertical reference plane.
+          </p>
+        </div>
+        <div class="precision-control">
+          <label for="coord-units">Coordinate units</label>
+          <select id="coord-units">
+            <option value="survey" selected>US Survey Feet</option>
+            <option value="intl">International Feet</option>
+            <option value="metric">Metric (meters)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="csv-import-panel">
+        <div class="csv-import-header">
+          <span class="csv-import-title">Import Trimble CSV</span>
+          <span class="csv-import-format">P, N, E, Z, D</span>
+        </div>
+        <label class="csv-file-label" for="distance-csv-file-input">
+          <input type="file" id="distance-csv-file-input" accept=".csv,text/csv" hidden>
+          <span class="btn-import-csv">Choose CSV file</span>
+          <span id="distance-csv-file-name" class="csv-file-name">No file selected</span>
+        </label>
+        <p class="csv-import-hint">
+          Export from SCS900 with coordinate order <strong>P, N, E, Z, D</strong>.
+          Control points, QA columns, and FXL attributes are ignored automatically.
+        </p>
+      </div>
+
+      <div class="point-distance-setup">
+          <div id="distance-assignment-panel" class="point-assignment-panel" hidden>
+            <div class="assignment-header">
+              <h3 class="results-group-title">Points</h3>
+              <p class="assignment-hint">
+                Choose two measure points (Pt 1 &amp; Pt 2). When plane correction is enabled, also choose Ref 1 and Ref 2.
+              </p>
+            </div>
+            <div class="assignment-table-wrap">
+              <table class="assignment-table" aria-label="Point assignment">
+                <thead>
+                  <tr>
+                    <th scope="col">Point</th>
+                    <th scope="col">Northing</th>
+                    <th scope="col">Easting</th>
+                    <th scope="col">Elevation</th>
+                    <th scope="col" class="col-role">Pt 1</th>
+                    <th scope="col" class="col-role">Pt 2</th>
+                    <th scope="col" class="col-role col-ref-role" hidden>Ref 1</th>
+                    <th scope="col" class="col-role col-ref-role" hidden>Ref 2</th>
+                  </tr>
+                </thead>
+                <tbody id="distance-assignment-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <details class="manual-points-panel">
+            <summary>Manual point entry</summary>
+            <p class="manual-points-desc">
+              Add individual points by hand. They appear in the assignment table above once added.
+            </p>
+            <button type="button" id="add-distance-point" class="btn-add-point">+ Add manual point</button>
+          </details>
+
+          <div class="plane-option-panel">
+            <label class="plane-option-toggle">
+              <input type="checkbox" id="use-vertical-plane">
+              <span>Project onto vertical plane <em>(optional — removes cross-track error)</em></span>
+            </label>
+            <p id="vertical-plane-hint" class="plane-option-desc" hidden>
+              Two reference points define a vertical plane through the alignment. Measure points
+              are projected horizontally onto that plane before distances are calculated.
+              Select Ref 1 and Ref 2 in the points table above.
+            </p>
+          </div>
+      </div>
+
+      <div class="point-distance-layout">
+        <div class="point-distance-measurements">
+          <h3 class="results-group-title">Direct Distance</h3>
+          <div class="distance-results" id="distance-results">
+            <div class="result-row">
+              <div class="result-label">
+                <span class="result-name">Horizontal Distance</span>
+                <span class="result-hint">√(ΔN² + ΔE²)</span>
+              </div>
+              <output class="result-value" id="dist-horizontal">—</output>
+            </div>
+            <div class="result-row">
+              <div class="result-label">
+                <span class="result-name">Vertical Distance</span>
+                <span class="result-hint">|ΔElevation|</span>
+              </div>
+              <output class="result-value" id="dist-vertical">—</output>
+            </div>
+            <div class="result-row">
+              <div class="result-label">
+                <span class="result-name">Slope Distance</span>
+                <span class="result-hint">√(Horizontal² + Vertical²)</span>
+              </div>
+              <output class="result-value" id="dist-slope">—</output>
+            </div>
+          </div>
+
+          <div id="corrected-distance-results" hidden>
+            <h3 class="results-group-title">On-Plane Distance <span class="results-badge">corrected</span></h3>
+            <div class="distance-results">
+              <div class="result-row result-row--highlight">
+                <div class="result-label">
+                  <span class="result-name">Horizontal Distance</span>
+                  <span class="result-hint">After plane projection</span>
+                </div>
+                <output class="result-value" id="dist-horizontal-plane">—</output>
+              </div>
+              <div class="result-row result-row--highlight">
+                <div class="result-label">
+                  <span class="result-name">Vertical Distance</span>
+                  <span class="result-hint">After plane projection</span>
+                </div>
+                <output class="result-value" id="dist-vertical-plane">—</output>
+              </div>
+              <div class="result-row result-row--highlight">
+                <div class="result-label">
+                  <span class="result-name">Slope Distance</span>
+                  <span class="result-hint">After plane projection</span>
+                </div>
+                <output class="result-value" id="dist-slope-plane">—</output>
+              </div>
+            </div>
+          </div>
+
+          <div id="cross-track-panel" class="cross-track-panel" hidden>
+            <h3 class="results-group-title">Cross-Track Offset</h3>
+            <div class="cross-track-grid">
+              <div class="cross-track-item">
+                <span class="cross-track-label">Point 1 offset from plane</span>
+                <output class="cross-track-value" id="cross-track-p1">—</output>
+              </div>
+              <div class="cross-track-item">
+                <span class="cross-track-label">Point 2 offset from plane</span>
+                <output class="cross-track-value" id="cross-track-p2">—</output>
+              </div>
+            </div>
+          </div>
+
+          <p id="point-status-line" class="status-line">Import a CSV file or add manual points.</p>
+        </div>
+
+        <div class="isometric-panel" id="distance-view3d-panel">
+          <div class="view3d-header">
+            <h3 class="isometric-title">3D View</h3>
+            <div class="view3d-toolbar">
+              <label class="view3d-toggle">
+                <input type="checkbox" id="distance-show-measurements" checked>
+                <span>Show measurements</span>
+              </label>
+              <button type="button" id="distance-zoom-extents" class="btn-view3d-tool">
+                <span class="btn-label-long">Zoom extents</span>
+                <span class="btn-label-short">Extents</span>
+              </button>
+              <button type="button" id="reset-distance-view3d" class="btn-view3d-tool">
+                <span class="btn-label-long">Reset view</span>
+                <span class="btn-label-short">Reset</span>
+              </button>
+              <button type="button" id="distance-fullscreen" class="btn-view3d-tool">
+                <span class="btn-label-long">Full screen</span>
+                <span class="btn-label-short">Full</span>
+              </button>
+            </div>
+          </div>
+          <div class="isometric-canvas-wrap" id="distance-view3d-container">
+            <p id="distance-view3d-placeholder" class="view3d-placeholder">
+              Import points and select Pt 1 &amp; Pt 2 to preview
+            </p>
+          </div>
+          <p class="view3d-controls-hint view3d-controls-hint--desktop">Drag to orbit · Scroll to zoom · Right-drag to pan</p>
+          <p class="view3d-controls-hint view3d-controls-hint--touch">Drag to orbit · Pinch to zoom · Two fingers to pan</p>
+          <ul class="view3d-legend">
+            <li><span class="legend-dot legend-dot--plane"></span> Reference plane &amp; projected points</li>
+            <li><span class="legend-dot legend-dot--orig"></span> Original measure points</li>
+            <li><span class="legend-dot legend-dot--adj"></span> On-plane position</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="csv-export-panel">
+        <button type="button" id="distance-export-csv" class="btn-export-csv" disabled>
+          Export on-plane points CSV
+        </button>
+        <p class="csv-export-hint">
+          <strong>P, N, E, Z, D</strong> · exports Pt 1 &amp; Pt 2 after vertical plane projection only
+        </p>
+      </div>
+    </section>
+
+    <section class="plane-grade-section" aria-labelledby="plane-grade-heading">
+      <div class="section-header">
+        <div>
+          <h2 id="plane-grade-heading">Adjust Points to Horizontal Plane</h2>
+          <p class="section-subtitle">
+            Import measured points, choose two to define the grade plane, and select which points to adjust.
+          </p>
+        </div>
+        <div class="precision-control">
+          <label for="plane-coord-units">Coordinate units</label>
+          <select id="plane-coord-units">
+            <option value="survey" selected>US Survey Feet</option>
+            <option value="intl">International Feet</option>
+            <option value="metric">Metric (meters)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="csv-import-panel">
+        <div class="csv-import-header">
+          <span class="csv-import-title">Import Trimble CSV</span>
+          <span class="csv-import-format">P, N, E, Z, D</span>
+        </div>
+        <label class="csv-file-label" for="csv-file-input">
+          <input type="file" id="csv-file-input" accept=".csv,text/csv" hidden>
+          <span class="btn-import-csv">Choose CSV file</span>
+          <span id="csv-file-name" class="csv-file-name">No file selected</span>
+        </label>
+        <p class="csv-import-hint">
+          Export from SCS900 with coordinate order <strong>P, N, E, Z, D</strong>.
+          Control points, QA columns, and FXL attributes are ignored automatically.
+        </p>
+      </div>
+
+      <div class="plane-grade-layout">
+        <div class="plane-grade-inputs">
+          <div id="point-assignment-panel" class="point-assignment-panel" hidden>
+            <div class="assignment-header">
+              <h3 class="results-group-title">Points</h3>
+              <p class="assignment-hint">
+                Choose exactly two points to define the plane (P1 &amp; P2), then check which others to adjust.
+              </p>
+            </div>
+            <div class="assignment-table-wrap">
+              <table class="assignment-table" aria-label="Point assignment">
+                <thead>
+                  <tr>
+                    <th scope="col">Point</th>
+                    <th scope="col">Northing</th>
+                    <th scope="col">Easting</th>
+                    <th scope="col">Elevation</th>
+                    <th scope="col" class="col-role">P1</th>
+                    <th scope="col" class="col-role">P2</th>
+                    <th scope="col" class="col-role">Adjust</th>
+                  </tr>
+                </thead>
+                <tbody id="point-assignment-body"></tbody>
+              </table>
+            </div>
+            <div id="adjusted-results-panel" class="adjusted-results-panel" hidden>
+              <h3 class="results-group-title">Adjusted Elevations</h3>
+              <div id="adjusted-results-list" class="adjusted-results-list"></div>
+            </div>
+          </div>
+
+          <details class="manual-points-panel">
+            <summary>Manual point entry</summary>
+            <p class="manual-points-desc">
+              Add individual points by hand. They appear in the assignment table above once added.
+            </p>
+            <button type="button" id="add-plane-point" class="btn-add-point">+ Add manual point</button>
+          </details>
+
+          <p id="plane-status-line" class="status-line">Import a CSV file or use manual point entry.</p>
+        </div>
+
+        <div class="isometric-panel" id="plane-view3d-panel">
+          <div class="view3d-header">
+            <h3 class="isometric-title">3D View</h3>
+            <div class="view3d-toolbar">
+              <label class="view3d-toggle">
+                <input type="checkbox" id="plane-show-measurements" checked>
+                <span>Show measurements</span>
+              </label>
+              <button type="button" id="plane-zoom-extents" class="btn-view3d-tool">
+                <span class="btn-label-long">Zoom extents</span>
+                <span class="btn-label-short">Extents</span>
+              </button>
+              <button type="button" id="reset-view3d" class="btn-view3d-tool">
+                <span class="btn-label-long">Reset view</span>
+                <span class="btn-label-short">Reset</span>
+              </button>
+              <button type="button" id="plane-fullscreen" class="btn-view3d-tool">
+                <span class="btn-label-long">Full screen</span>
+                <span class="btn-label-short">Full</span>
+              </button>
+            </div>
+          </div>
+          <div class="isometric-canvas-wrap" id="plane-view3d-container">
+            <p id="view3d-placeholder" class="view3d-placeholder">
+              Import a CSV or enter plane points to preview
+            </p>
+          </div>
+          <p class="view3d-controls-hint view3d-controls-hint--desktop">
+            Drag to orbit · Scroll to zoom · Right-drag to pan
+          </p>
+          <p class="view3d-controls-hint view3d-controls-hint--touch">
+            Drag to orbit · Pinch to zoom · Two fingers to pan
+          </p>
+          <ul class="view3d-legend">
+            <li><span class="legend-dot legend-dot--plane"></span> Plane points</li>
+            <li><span class="legend-dot legend-dot--orig"></span> Original elevation</li>
+            <li><span class="legend-dot legend-dot--adj"></span> Adjusted on plane</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="csv-export-panel">
+        <button type="button" id="plane-export-csv" class="btn-export-csv" disabled>
+          Export adjusted points CSV
+        </button>
+        <p class="csv-export-hint">
+          <strong>P, N, E, Z, D</strong> · exports points checked for adjust with plane-corrected elevations only
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p id="status-line" class="status-line" hidden></p>
+      <details class="format-help">
+        <summary>Accepted input formats</summary>
+        <ul>
+          <li><strong>Meters / feet / inches:</strong> plain decimals (<code>3.048</code>, <code>10.5</code>)</li>
+          <li><strong>Feet-inches:</strong> <code>12&#39;-6 1/2&quot;</code>, <code>12-6 1/2</code>, <code>12 ft 6 1/2 in</code></li>
+          <li><strong>Inches only:</strong> <code>6 1/2&quot;</code> or <code>78.5 in</code></li>
+          <li><strong>Feet only:</strong> <code>10&#39;</code> or <code>10 ft</code></li>
+        </ul>
+      </details>
+    </footer>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script src="js/units.js"></script>
+  <script src="js/csv-import.js"></script>
+  <script src="js/converter.js"></script>
+  <script src="js/volume-converter.js"></script>
+  <script type="module" src="js/point-distance.js"></script>
+  <script type="module" src="js/plane-grade.js"></script>
+</body>
+</html>

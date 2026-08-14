@@ -18,6 +18,8 @@ if (!window.Units || !window.CsvImport) {
   const adjustedResultsList = document.getElementById("adjusted-results-list");
   const addPointBtn = document.getElementById("add-plane-point");
   const exportCsvBtn = document.getElementById("plane-export-csv");
+  const loadExampleBtn = document.getElementById("plane-load-example");
+  const clearDataBtn = document.getElementById("plane-clear-data");
 
   if (!view3dContainer || !assignmentBody) {
     console.error("Plane grade UI elements missing.");
@@ -380,6 +382,35 @@ if (!window.Units || !window.CsvImport) {
       view3d.update({ planePoints, additionalPoints });
     }
 
+    function clearAllData() {
+      points = [];
+      if (csvFileInput) csvFileInput.value = "";
+      if (csvFileName) csvFileName.textContent = "No file selected";
+      renderAssignmentTable();
+      updatePlaneGrade();
+      view3d.resetCamera();
+    }
+
+    function loadExampleData() {
+      if (!window.ExampleData) {
+        setPlaneStatus("Example data module failed to load.", true);
+        return;
+      }
+
+      const example = window.ExampleData.getPlaneExample();
+      points = example.points.map((point) => ({ ...point }));
+      if (csvFileName) {
+        csvFileName.textContent = `Example: ${example.label}`;
+      }
+      renderAssignmentTable();
+      updatePlaneGrade();
+      view3d.resetCamera();
+      setPlaneStatus(
+        `Loaded example (${example.label}). P1 and P2 define a 2% grade — ` +
+          "four stations are checked and adjusted to the plane."
+      );
+    }
+
     function loadCsvData(parsed) {
       points = parsed.points.map((point) => ({ ...point }));
       renderAssignmentTable();
@@ -444,6 +475,14 @@ if (!window.Units || !window.CsvImport) {
       syncView3dScale();
       updatePlaneGrade();
     });
+
+    if (loadExampleBtn) {
+      loadExampleBtn.addEventListener("click", loadExampleData);
+    }
+
+    if (clearDataBtn) {
+      clearDataBtn.addEventListener("click", clearAllData);
+    }
 
     if (csvFileInput) {
       csvFileInput.addEventListener("change", (event) => {

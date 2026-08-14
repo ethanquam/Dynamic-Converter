@@ -611,6 +611,61 @@ body {
   cursor: pointer;
 }
 
+.csv-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-load-example {
+  padding: 0.55rem 0.9rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-dim);
+  background: var(--surface);
+  border: 1px solid var(--accent-dim);
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-load-example:hover {
+  color: var(--text-on-accent);
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+}
+
+.btn-load-example:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn-clear-data {
+  padding: 0.55rem 0.9rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-clear-data:hover {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--text-muted);
+}
+
+.btn-clear-data:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .btn-import-csv {
   display: inline-block;
   padding: 0.55rem 0.9rem;
@@ -1386,11 +1441,27 @@ body {
     width: 100%;
   }
 
+  .csv-import-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
   .btn-import-csv {
     display: block;
     text-align: center;
     min-height: 2.75rem;
     line-height: 1.6;
+  }
+
+  .btn-load-example {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .btn-clear-data {
+    width: 100%;
+    min-height: 2.75rem;
   }
 
   .btn-export-csv {

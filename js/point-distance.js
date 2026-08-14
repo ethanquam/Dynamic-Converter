@@ -21,6 +21,8 @@ if (!window.Units || !window.CsvImport) {
   const assignmentBody = document.getElementById("distance-assignment-body");
   const addPointBtn = document.getElementById("add-distance-point");
   const exportCsvBtn = document.getElementById("distance-export-csv");
+  const loadExampleBtn = document.getElementById("distance-load-example");
+  const clearDataBtn = document.getElementById("distance-clear-data");
 
   const distHorizontal = document.getElementById("dist-horizontal");
   const distVertical = document.getElementById("dist-vertical");
@@ -483,6 +485,38 @@ if (!window.Units || !window.CsvImport) {
       );
     }
 
+    function clearAllData() {
+      points = [];
+      if (csvFileInput) csvFileInput.value = "";
+      if (csvFileName) csvFileName.textContent = "No file selected";
+      renderAssignmentTable();
+      calculateDistances();
+      view3d.resetCamera();
+    }
+
+    function loadExampleData() {
+      if (!window.ExampleData) {
+        setPointStatus("Example data module failed to load.", true);
+        return;
+      }
+
+      const example = window.ExampleData.getDistanceExample();
+      points = example.points.map((point) => ({ ...point }));
+      if (useVerticalPlane && example.enableVerticalPlane !== undefined) {
+        useVerticalPlane.checked = example.enableVerticalPlane;
+      }
+      if (csvFileName) {
+        csvFileName.textContent = `Example: ${example.label}`;
+      }
+      renderAssignmentTable();
+      calculateDistances();
+      view3d.resetCamera();
+      setPointStatus(
+        `Loaded example (${example.label}). Measure A and B are offset from the alignment — ` +
+          "compare direct vs on-plane distances and cross-track offsets."
+      );
+    }
+
     function loadCsvData(parsed) {
       points = parsed.points.map((point) => ({
         ...point,
@@ -557,6 +591,14 @@ if (!window.Units || !window.CsvImport) {
       renderAssignmentTable();
       calculateDistances();
     });
+
+    if (loadExampleBtn) {
+      loadExampleBtn.addEventListener("click", loadExampleData);
+    }
+
+    if (clearDataBtn) {
+      clearDataBtn.addEventListener("click", clearAllData);
+    }
 
     if (csvFileInput) {
       csvFileInput.addEventListener("change", (event) => {

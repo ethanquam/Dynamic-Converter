@@ -170,14 +170,23 @@
           <span class="csv-import-title">Import Trimble CSV</span>
           <span class="csv-import-format">P, N, E, Z, D</span>
         </div>
-        <label class="csv-file-label" for="distance-csv-file-input">
-          <input type="file" id="distance-csv-file-input" accept=".csv,text/csv" hidden>
-          <span class="btn-import-csv">Choose CSV file</span>
-          <span id="distance-csv-file-name" class="csv-file-name">No file selected</span>
-        </label>
+        <div class="csv-import-actions">
+          <label class="csv-file-label" for="distance-csv-file-input">
+            <input type="file" id="distance-csv-file-input" accept=".csv,text/csv" hidden>
+            <span class="btn-import-csv">Choose CSV file</span>
+            <span id="distance-csv-file-name" class="csv-file-name">No file selected</span>
+          </label>
+          <button type="button" id="distance-load-example" class="btn-load-example">
+            Load example data
+          </button>
+          <button type="button" id="distance-clear-data" class="btn-clear-data">
+            Clear data
+          </button>
+        </div>
         <p class="csv-import-hint">
           Export from SCS900 with coordinate order <strong>P, N, E, Z, D</strong>.
           Control points, QA columns, and FXL attributes are ignored automatically.
+          Or load the example to see Pt 1/Pt 2 distance with vertical plane correction.
         </p>
       </div>
 
@@ -370,14 +379,23 @@
           <span class="csv-import-title">Import Trimble CSV</span>
           <span class="csv-import-format">P, N, E, Z, D</span>
         </div>
-        <label class="csv-file-label" for="csv-file-input">
-          <input type="file" id="csv-file-input" accept=".csv,text/csv" hidden>
-          <span class="btn-import-csv">Choose CSV file</span>
-          <span id="csv-file-name" class="csv-file-name">No file selected</span>
-        </label>
+        <div class="csv-import-actions">
+          <label class="csv-file-label" for="csv-file-input">
+            <input type="file" id="csv-file-input" accept=".csv,text/csv" hidden>
+            <span class="btn-import-csv">Choose CSV file</span>
+            <span id="csv-file-name" class="csv-file-name">No file selected</span>
+          </label>
+          <button type="button" id="plane-load-example" class="btn-load-example">
+            Load example data
+          </button>
+          <button type="button" id="plane-clear-data" class="btn-clear-data">
+            Clear data
+          </button>
+        </div>
         <p class="csv-import-hint">
           Export from SCS900 with coordinate order <strong>P, N, E, Z, D</strong>.
           Control points, QA columns, and FXL attributes are ignored automatically.
+          Or load the example to see grade-plane adjustment on four sample stations.
         </p>
       </div>
 
@@ -498,6 +516,7 @@
   </script>
   <script src="js/units.js"></script>
   <script src="js/csv-import.js"></script>
+  <script src="js/example-data.js"></script>
   <script src="js/converter.js"></script>
   <script src="js/volume-converter.js"></script>
   <script type="module" src="js/point-distance.js"></script>

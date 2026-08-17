@@ -2,6 +2,7 @@
   "use strict";
 
   const METERS_PER_FOOT = 0.3048;
+  const METERS_PER_INCH = METERS_PER_FOOT / 12;
 
   const FIELDS = {
     a: { inputId: "pythag-a", label: "Leg A", diagramSide: "a" },
@@ -18,8 +19,141 @@
   const sendDistanceBtn = document.getElementById("pythag-send-distance");
   const unitTabs = document.querySelectorAll("[data-pythag-units]");
   const diagramEl = document.getElementById("pythag-diagram");
+  const precisionSelect = document.getElementById("precision");
 
-  function parseDecimal(text) {
+  function getPrecision() {
+    return Number(precisionSelect?.value) || 16;
+  }
+
+  function parseFraction(text) {
+    const match = text.match(/^(-?\d+)\s*\/\s*(\d+)$/);
+    if (!match) return null;
+    const num = Number(match[1]);
+    const den = Number(match[2]);
+    if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) return null;
+    return num / den;
+  }
+
+  function parseFeetInchesFraction(text) {
+    const trimmed = text.trim();
+    if (!trimmed) return { empty: true };
+
+    let working = trimmed
+      .replace(/[″""]/g, '"')
+      .replace(/[′'′]/g, "'")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (/^-?\d+(\.\d+)?$/.test(working)) {
+      const feet = Number(working);
+      if (feet < 0) return { error: "Side length cannot be negative." };
+      return { meters: feet * METERS_PER_FOOT };
+    }
+
+    let feet = 0;
+    let inches = 0;
+    let inchesOnly = false;
+
+    const hyphenMatch = working.match(/^(-?\d+)\s*-\s*(.+)$/);
+    if (hyphenMatch && !working.includes("'") && !/\bft\b/i.test(working)) {
+      feet = Number(hyphenMatch[1]);
+      working = hyphenMatch[2];
+    }
+
+    const feetQuoteMatch = working.match(/^(-?\d+(?:\.\d+)?)\s*'/);
+    if (feetQuoteMatch) {
+      feet = Number(feetQuoteMatch[1]);
+      working = working.slice(feetQuoteMatch[0].length).trim();
+    } else {
+      const feetWordMatch = working.match(/^(-?\d+(?:\.\d+)?)\s*ft\b/i);
+      if (feetWordMatch) {
+        feet = Number(feetWordMatch[1]);
+        working = working.slice(feetWordMatch[0].length).trim();
+      }
+    }
+
+    if (/^(-?\d|.*")/.test(working) && feet === 0 && !working.includes("'")) {
+      inchesOnly = /^\d/.test(working) && (working.includes('"') || /\bin\b/i.test(working));
+    }
+
+    working = working.replace(/\s*in(?:ches)?\.?\s*$/i, "").replace(/"\s*$/, "").trim();
+
+    if (!working && feet !== 0) {
+      if (feet < 0) return { error: "Side length cannot be negative." };
+      return { meters: feet * METERS_PER_FOOT };
+    }
+
+    if (working) {
+      const inchParts = working.match(/^(-?\d+(?:\.\d+)?)(?:\s+(\d+\/\d+))?$/);
+      if (inchParts) {
+        inches = Number(inchParts[1]);
+        if (inchParts[2]) {
+          const frac = parseFraction(inchParts[2]);
+          if (frac === null) return { error: "Invalid fraction." };
+          inches += frac;
+        }
+      } else {
+        const fracOnly = working.match(/^(\d+\/\d+)$/);
+        if (fracOnly) {
+          const frac = parseFraction(fracOnly[1]);
+          if (frac === null) return { error: "Invalid fraction." };
+          inches = frac;
+        } else {
+          return {
+            error: 'Use formats like 12\'-6 1/2", 12-6 1/2, or 6 1/2".',
+          };
+        }
+      }
+    }
+
+    if (inchesOnly && feet === 0) {
+      if (inches < 0) return { error: "Side length cannot be negative." };
+      return { meters: inches * METERS_PER_INCH };
+    }
+
+    const totalFeet = feet + inches / 12;
+    if (totalFeet < 0) return { error: "Side length cannot be negative." };
+    return { meters: totalFeet * METERS_PER_FOOT };
+  }
+
+  function formatFeetInchesFraction(meters, precisionDenominator) {
+    if (!Number.isFinite(meters)) return "";
+
+    const sign = meters < 0 ? -1 : 1;
+    let totalInches = (Math.abs(meters) / METERS_PER_INCH) * precisionDenominator;
+    totalInches = Math.round(totalInches);
+
+    let feet = Math.floor(totalInches / (12 * precisionDenominator));
+    let inchUnits = totalInches - feet * 12 * precisionDenominator;
+
+    if (inchUnits === 12 * precisionDenominator) {
+      feet += 1;
+      inchUnits = 0;
+    }
+
+    const wholeInches = Math.floor(inchUnits / precisionDenominator);
+    const fracUnits = inchUnits % precisionDenominator;
+
+    let result = (sign < 0 ? "-" : "") + feet + "'";
+
+    if (wholeInches > 0 || fracUnits > 0) {
+      result += "-";
+      if (wholeInches > 0) result += wholeInches;
+      if (fracUnits > 0) {
+        const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+        const g = gcd(fracUnits, precisionDenominator);
+        const num = fracUnits / g;
+        const den = precisionDenominator / g;
+        if (wholeInches > 0) result += " ";
+        result += num + "/" + den;
+      }
+      result += '"';
+    }
+
+    return result;
+  }
+
+  function parseDecimal(text, toMeters = (value) => value) {
     const trimmed = text.trim();
     if (!trimmed) return { empty: true };
 
@@ -31,22 +165,52 @@
       return { error: "Side length cannot be negative." };
     }
 
-    const meters = unitSystem === "metric" ? value : value * METERS_PER_FOOT;
-    return { meters, display: value };
+    return { meters: toMeters(value) };
+  }
+
+  function parseSide(text) {
+    if (unitSystem === "metric") {
+      return parseDecimal(text, (value) => value);
+    }
+    if (unitSystem === "imperial") {
+      return parseDecimal(text, (value) => value * METERS_PER_FOOT);
+    }
+    return parseFeetInchesFraction(text);
   }
 
   function formatDisplay(meters) {
     if (!Number.isFinite(meters)) return "";
-    const value = unitSystem === "metric" ? meters : meters / METERS_PER_FOOT;
-    return String(Number(value.toFixed(10)));
+    if (unitSystem === "metric") {
+      return String(Number(meters.toFixed(10)));
+    }
+    if (unitSystem === "imperial") {
+      return String(Number((meters / METERS_PER_FOOT).toFixed(10)));
+    }
+    return formatFeetInchesFraction(meters, getPrecision());
+  }
+
+  function formatDiagram(meters) {
+    if (!Number.isFinite(meters)) return "—";
+    const formatted = formatDisplay(meters);
+    return formatted.length > 14 ? formatted.replace(/"/g, "") : formatted;
   }
 
   function unitLabel() {
-    return unitSystem === "metric" ? "m" : "ft";
+    if (unitSystem === "metric") return "m";
+    if (unitSystem === "imperial") return "ft";
+    return "";
   }
 
   function unitHint() {
-    return unitSystem === "metric" ? "Decimal meters" : "Decimal feet";
+    if (unitSystem === "metric") return "Decimal meters";
+    if (unitSystem === "imperial") return "Decimal feet";
+    return "Feet, inches, fractions";
+  }
+
+  function inputPlaceholder() {
+    if (unitSystem === "metric") return "e.g. 1.524";
+    if (unitSystem === "imperial") return "e.g. 3.5";
+    return "e.g. 3'-4 1/2\"";
   }
 
   function setStatus(message, isError = false) {
@@ -60,7 +224,7 @@
     const input = document.getElementById(FIELDS[key].inputId);
     if (!input) return { empty: true };
 
-    const parsed = parseDecimal(input.value);
+    const parsed = parseSide(input.value);
     if (parsed.error) return { error: parsed.error };
     if (parsed.empty) return { empty: true };
     return { meters: parsed.meters };
@@ -148,7 +312,7 @@
       const side = node.dataset.side;
       const value = sides[side];
       node.textContent =
-        value == null || sides[side]?.error ? "—" : formatDisplay(value);
+        value == null || (typeof value === "object" && value.error) ? "—" : formatDiagram(value);
     });
   }
 
@@ -160,12 +324,39 @@
   }
 
   function syncUnitLabels() {
+    const hideUnit = unitSystem === "imperial-ftin";
+
     document.querySelectorAll("[data-pythag-unit-label]").forEach((el) => {
+      el.hidden = hideUnit;
       el.textContent = unitLabel();
     });
     document.querySelectorAll("[data-pythag-unit-hint]").forEach((el) => {
       el.textContent = unitHint();
     });
+    Object.keys(FIELDS).forEach((key) => {
+      const input = document.getElementById(FIELDS[key].inputId);
+      if (!input) return;
+      input.placeholder = inputPlaceholder();
+      if (unitSystem === "metric" || unitSystem === "imperial") {
+        input.setAttribute("inputmode", "decimal");
+      } else {
+        input.removeAttribute("inputmode");
+      }
+    });
+  }
+
+  function refreshFormattedValues(numericSides) {
+    isUpdating = true;
+    Object.keys(FIELDS).forEach((key) => {
+      const input = document.getElementById(FIELDS[key].inputId);
+      if (!input) return;
+      if (numericSides[key] != null) {
+        input.value = formatDisplay(numericSides[key]);
+      }
+    });
+    isUpdating = false;
+    updateDiagram(numericSides);
+    updateSendButton(numericSides);
   }
 
   function updateFromField(sourceKey) {
@@ -283,18 +474,7 @@
 
     syncUnitLabels();
 
-    isUpdating = true;
-    Object.keys(FIELDS).forEach((key) => {
-      const input = document.getElementById(FIELDS[key].inputId);
-      if (!input) return;
-      if (numericSides[key] != null) {
-        input.value = formatDisplay(numericSides[key]);
-      }
-    });
-    isUpdating = false;
-
-    updateDiagram(numericSides);
-    updateSendButton(numericSides);
+    refreshFormattedValues(numericSides);
   }
 
   function sendToDistance() {
@@ -336,6 +516,18 @@
 
   unitTabs.forEach((tab) => {
     tab.addEventListener("click", () => setUnitSystem(tab.dataset.pythagUnits));
+  });
+
+  precisionSelect?.addEventListener("change", () => {
+    if (unitSystem !== "imperial-ftin") return;
+    const sides = readAllSides();
+    const numericSides = {};
+    for (const key of Object.keys(FIELDS)) {
+      if (typeof sides[key] === "number") {
+        numericSides[key] = sides[key];
+      }
+    }
+    refreshFormattedValues(numericSides);
   });
 
   sendDistanceBtn?.addEventListener("click", sendToDistance);

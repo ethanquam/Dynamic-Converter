@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Dynamic Converter v1</title>
-  <link rel="stylesheet" href="css/styles.css?v=37">
+  <link rel="stylesheet" href="css/styles.css?v=38">
 </head>
 <body>
   <div class="app">
@@ -405,8 +405,18 @@
       </div>
 
       <div class="pythag-input-tabs" role="tablist" aria-label="Pythagorean units">
-        <button type="button" class="pythag-input-tab is-active" data-pythag-units="imperial" role="tab" aria-selected="true">Imperial (decimal ft)</button>
-        <button type="button" class="pythag-input-tab" data-pythag-units="metric" role="tab" aria-selected="false">Metric (decimal m)</button>
+        <button type="button" class="pythag-input-tab is-active" data-pythag-units="imperial" role="tab" aria-selected="true">
+          <span class="pythag-input-tab-text pythag-input-tab-text--long">Imperial (decimal ft)</span>
+          <span class="pythag-input-tab-text pythag-input-tab-text--short">Decimal ft</span>
+        </button>
+        <button type="button" class="pythag-input-tab" data-pythag-units="imperial-ftin" role="tab" aria-selected="false">
+          <span class="pythag-input-tab-text pythag-input-tab-text--long">Imperial (ft/in)</span>
+          <span class="pythag-input-tab-text pythag-input-tab-text--short">Ft/in</span>
+        </button>
+        <button type="button" class="pythag-input-tab" data-pythag-units="metric" role="tab" aria-selected="false">
+          <span class="pythag-input-tab-text pythag-input-tab-text--long">Metric (decimal m)</span>
+          <span class="pythag-input-tab-text pythag-input-tab-text--short">Metric</span>
+        </button>
       </div>
 
       <div class="pythagorean-layout">
@@ -431,8 +441,8 @@
               <span class="measure-hint" data-pythag-unit-hint>Decimal feet</span>
             </div>
             <div class="measure-input-wrap">
-              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
-                     id="pythag-a" aria-label="Leg A">
+              <input type="text" autocomplete="off" spellcheck="false"
+                     id="pythag-a" aria-label="Leg A" placeholder="e.g. 3.5">
               <span class="unit" data-pythag-unit-label>ft</span>
             </div>
           </section>
@@ -443,8 +453,8 @@
               <span class="measure-hint" data-pythag-unit-hint>Decimal feet</span>
             </div>
             <div class="measure-input-wrap">
-              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
-                     id="pythag-b" aria-label="Leg B">
+              <input type="text" autocomplete="off" spellcheck="false"
+                     id="pythag-b" aria-label="Leg B" placeholder="e.g. 4">
               <span class="unit" data-pythag-unit-label>ft</span>
             </div>
           </section>
@@ -455,8 +465,8 @@
               <span class="measure-hint" data-pythag-unit-hint>Decimal feet</span>
             </div>
             <div class="measure-input-wrap">
-              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
-                     id="pythag-c" aria-label="Hypotenuse">
+              <input type="text" autocomplete="off" spellcheck="false"
+                     id="pythag-c" aria-label="Hypotenuse" placeholder="e.g. 5">
               <span class="unit" data-pythag-unit-label>ft</span>
             </div>
           </section>
@@ -485,7 +495,7 @@
           <li><strong>Calculator (Metric):</strong> enter decimal meters (e.g. <code>1.5</code> or <code>0.3048</code>)</li>
           <li><strong>Calculator (Standard):</strong> plain decimal numbers — no units, no converter export</li>
           <li><strong>Calculator (Tip):</strong> enter check amount and tip % for total, or max spend to find the highest tip within budget</li>
-          <li><strong>Pythagorean:</strong> enter any two sides of a right triangle in decimal feet or meters</li>
+          <li><strong>Pythagorean:</strong> decimal feet or meters, or feet/inches like <code>3&#39;-4 1/2&quot;</code></li>
         </ul>
       </details>
     </footer>

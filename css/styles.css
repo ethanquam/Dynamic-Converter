@@ -819,13 +819,17 @@ body.is-scroll-locked {
 
 .pythag-input-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.35rem;
   margin-bottom: 1rem;
   padding: 0.35rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+}
+
+.pythag-input-tab-text--short {
+  display: none;
 }
 
 .pythag-input-tab {
@@ -838,6 +842,7 @@ body.is-scroll-locked {
   border: 1px solid transparent;
   border-radius: calc(var(--radius) - 2px);
   cursor: pointer;
+  line-height: 1.25;
 }
 
 .pythag-input-tab.is-active {
@@ -3068,6 +3073,22 @@ body.is-feedback-open {
 
   .calc-input-tabs {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .pythag-input-tabs {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pythag-input-tab-text--long {
+    display: none;
+  }
+
+  .pythag-input-tab-text--short {
+    display: inline;
+  }
+
+  .pythag-input-tab:last-child {
+    grid-column: 1 / -1;
   }
 
   .calc-tip-fields {

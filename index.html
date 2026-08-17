@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Dynamic Converter v1</title>
-  <link rel="stylesheet" href="css/styles.css?v=35">
+  <link rel="stylesheet" href="css/styles.css?v=36">
 </head>
 <body>
   <div class="app">
@@ -37,7 +37,22 @@
       </div>
     </header>
 
-    <div class="app-top-nav">
+    <div class="app-top-nav" id="app-top-nav">
+      <button
+        type="button"
+        class="app-top-nav-toggle"
+        id="app-top-nav-toggle"
+        aria-expanded="true"
+        aria-controls="app-top-nav-body"
+      >
+        <svg class="app-top-nav-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="app-top-nav-toggle-label app-top-nav-toggle-label--expanded">Hide navigation</span>
+        <span class="app-top-nav-toggle-label app-top-nav-toggle-label--collapsed" hidden>Show navigation</span>
+      </button>
+
+      <div class="app-top-nav-body" id="app-top-nav-body">
       <nav class="app-page-switch" aria-label="Switch page">
         <a class="app-page-switch-link is-current" href="#converters" data-page-link="converters" aria-current="page" title="Converters &amp; Calculators">
           <span class="app-page-switch-text app-page-switch-text--long">Converters &amp; Calculators</span>
@@ -74,6 +89,7 @@
           <span class="app-nav-link-text app-nav-link-text--short">Feedback</span>
         </button>
       </nav>
+      </div>
     </div>
 
     <div id="page-converters" class="app-page" data-page="converters">
@@ -852,6 +868,7 @@
   }
   </script>
   <script src="js/feedback.js"></script>
+  <script src="js/nav-collapse.js"></script>
   <script src="js/page-nav.js"></script>
   <script src="js/scroll-lock.js"></script>
   <script src="js/units.js"></script>

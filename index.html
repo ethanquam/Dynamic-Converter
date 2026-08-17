@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Dynamic Converter v1</title>
-  <link rel="stylesheet" href="css/styles.css?v=33">
+  <link rel="stylesheet" href="css/styles.css?v=34">
 </head>
 <body>
   <div class="app">
@@ -741,6 +741,78 @@
     </div>
   </div>
 
+  <div class="feedback-modal" id="feedback-modal" hidden aria-hidden="true">
+    <div class="feedback-modal-backdrop" data-feedback-close tabindex="-1" aria-hidden="true"></div>
+    <div
+      class="feedback-modal-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="feedback-modal-title"
+    >
+      <div class="feedback-modal-header">
+        <h2 id="feedback-modal-title">Provide Feedback</h2>
+        <button type="button" class="feedback-modal-close" data-feedback-close aria-label="Close feedback form">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <form id="feedback-form" class="feedback-form">
+        <p class="feedback-modal-intro">
+          Send a bug report, idea, or question. No email sign-in required.
+        </p>
+
+        <label class="feedback-field" for="feedback-subject">
+          <span class="feedback-label">Subject</span>
+          <input
+            type="text"
+            id="feedback-subject"
+            name="subject"
+            value="Dynamic Converter Feedback"
+            maxlength="120"
+            required
+            autocomplete="off"
+          >
+        </label>
+
+        <label class="feedback-field" for="feedback-message">
+          <span class="feedback-label">Message</span>
+          <textarea
+            id="feedback-message"
+            name="message"
+            rows="6"
+            required
+            placeholder="Describe your feedback…"
+          ></textarea>
+        </label>
+
+        <input
+          type="text"
+          name="_honey"
+          class="feedback-honey"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+        >
+
+        <p class="feedback-status" id="feedback-status" hidden aria-live="polite"></p>
+
+        <div class="feedback-form-actions">
+          <button type="button" class="btn-panel-action btn-panel-action--muted" data-feedback-close>
+            Cancel
+          </button>
+          <button type="submit" class="btn-panel-action" id="feedback-submit">
+            Send feedback
+          </button>
+        </div>
+      </form>
+
+      <div class="feedback-success" id="feedback-success" hidden>
+        <p class="feedback-success-text">Thanks — your feedback was sent.</p>
+        <button type="button" class="btn-panel-action" data-feedback-close>Close</button>
+      </div>
+    </div>
+  </div>
+
   <div class="scroll-lock-float" id="scroll-lock-float">
     <p class="scroll-lock-float-label" id="scroll-lock-label" aria-live="polite">
       <span class="scroll-lock-float-label-text scroll-lock-float-label-text--idle">Lock view</span>
@@ -773,6 +845,7 @@
     }
   }
   </script>
+  <script src="js/feedback.js"></script>
   <script src="js/page-nav.js"></script>
   <script src="js/scroll-lock.js"></script>
   <script src="js/units.js"></script>

@@ -74,28 +74,7 @@
     }
   }
 
-  function openFeedbackEmail() {
-    const email = "ethan_quam@trimble.com";
-    const subject = encodeURIComponent("Dynamic Converter Feedback");
-    const outlookUrl =
-      `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(email)}&subject=${subject}`;
-    const mailtoUrl = `mailto:${email}?subject=${subject}`;
-
-    const opened = window.open(outlookUrl, "_blank", "noopener,noreferrer");
-    if (!opened) {
-      window.location.href = mailtoUrl;
-    }
-  }
-
   document.addEventListener("click", (event) => {
-    const feedbackLink = event.target.closest("[data-feedback-link]");
-    if (feedbackLink) {
-      event.preventDefault();
-      event.stopPropagation();
-      openFeedbackEmail();
-      return;
-    }
-
     const pageLink = event.target.closest("[data-page-link]");
     if (pageLink) {
       event.preventDefault();

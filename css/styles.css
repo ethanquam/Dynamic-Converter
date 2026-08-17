@@ -806,6 +806,112 @@ body.is-scroll-locked {
   margin-bottom: 0;
 }
 
+.pythagorean-section {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.pythagorean-section .status-line {
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}
+
+.pythag-input-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0.35rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.pythag-input-tab {
+  padding: 0.55rem 0.65rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+}
+
+.pythag-input-tab.is-active {
+  color: var(--text-on-accent);
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+}
+
+.pythagorean-layout {
+  display: grid;
+  grid-template-columns: minmax(11rem, 16rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.pythag-diagram-panel {
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.pythag-diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pythag-diagram-label {
+  fill: var(--text-muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.pythag-diagram-value {
+  fill: var(--accent-dim);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.pythag-formula {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--text-muted);
+}
+
+.pythag-grid {
+  min-width: 0;
+}
+
+.measure-row.is-computed {
+  box-shadow: inset 0 0 0 1px rgba(107, 143, 88, 0.35);
+}
+
+.measure-row.is-computed .measure-name::after {
+  content: " · calculated";
+  font-weight: 500;
+  color: var(--accent-dim);
+}
+
+.pythag-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.pythag-actions .btn-panel-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .measure-row {
   display: grid;
   grid-template-columns: 1fr;
@@ -2355,6 +2461,7 @@ body.is-feedback-open {
 .area-converter-section,
 .volume-converter-section,
 .construction-calc-section,
+.pythagorean-section,
 .point-distance-section,
 .plane-grade-section {
   scroll-margin-top: var(--sticky-offset);
@@ -2529,6 +2636,7 @@ body.is-feedback-open {
   .area-converter-section,
   .volume-converter-section,
   .construction-calc-section,
+  .pythagorean-section,
   .point-distance-section,
   .plane-grade-section {
     scroll-margin-top: var(--sticky-offset);
@@ -2576,10 +2684,20 @@ body.is-feedback-open {
   .area-converter-section,
   .volume-converter-section,
   .construction-calc-section,
+  .pythagorean-section,
   .point-distance-section,
   .plane-grade-section {
     margin-top: 1.75rem;
     padding-top: 1.5rem;
+  }
+
+  .pythagorean-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pythag-diagram-panel {
+    max-width: 16rem;
+    margin-inline: auto;
   }
 
   .measure-row {

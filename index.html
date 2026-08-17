@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Dynamic Converter v1</title>
-  <link rel="stylesheet" href="css/styles.css?v=36">
+  <link rel="stylesheet" href="css/styles.css?v=37">
 </head>
 <body>
   <div class="app">
@@ -70,6 +70,7 @@
           <a class="app-nav-link" href="#area-converter-heading">Area</a>
           <a class="app-nav-link" href="#volume-converter-heading">Volume</a>
           <a class="app-nav-link" href="#construction-calc-heading">Calculator</a>
+          <a class="app-nav-link" href="#pythagorean-heading">Pythagorean</a>
           <a class="app-nav-link app-nav-link--page" href="#survey" data-page-link="survey">Survey Tools</a>
         </div>
         <button type="button" class="app-nav-link app-nav-link--feedback" data-feedback-link>
@@ -393,6 +394,84 @@
       </div>
     </section>
 
+    <section class="pythagorean-section" aria-labelledby="pythagorean-heading">
+      <div class="section-header">
+        <div>
+          <h2 id="pythagorean-heading">Pythagorean Calculator</h2>
+          <p class="section-subtitle">
+            Enter any two sides of a right triangle — the third updates instantly.
+          </p>
+        </div>
+      </div>
+
+      <div class="pythag-input-tabs" role="tablist" aria-label="Pythagorean units">
+        <button type="button" class="pythag-input-tab is-active" data-pythag-units="imperial" role="tab" aria-selected="true">Imperial (decimal ft)</button>
+        <button type="button" class="pythag-input-tab" data-pythag-units="metric" role="tab" aria-selected="false">Metric (decimal m)</button>
+      </div>
+
+      <div class="pythagorean-layout">
+        <div class="pythag-diagram-panel" id="pythag-diagram-panel" aria-hidden="true">
+          <svg class="pythag-diagram" id="pythag-diagram" viewBox="0 0 220 170" role="img" aria-label="Right triangle diagram">
+            <polygon points="30,140 170,140 170,40" fill="rgba(107, 143, 88, 0.12)" stroke="var(--accent-dim)" stroke-width="2"/>
+            <rect x="155" y="125" width="15" height="15" fill="none" stroke="var(--accent-dim)" stroke-width="1.5"/>
+            <text x="100" y="158" text-anchor="middle" class="pythag-diagram-label">A</text>
+            <text x="182" y="95" text-anchor="start" class="pythag-diagram-label">B</text>
+            <text x="88" y="78" text-anchor="end" class="pythag-diagram-label">C</text>
+            <text x="100" y="173" text-anchor="middle" class="pythag-diagram-value" data-side="a">—</text>
+            <text x="188" y="95" text-anchor="start" class="pythag-diagram-value" data-side="b">—</text>
+            <text x="78" y="72" text-anchor="end" class="pythag-diagram-value" data-side="c">—</text>
+          </svg>
+          <p class="pythag-formula">a² + b² = c²</p>
+        </div>
+
+        <div class="converter-grid pythag-grid">
+          <section class="measure-row" data-pythag-field="a">
+            <div class="measure-label">
+              <span class="measure-name">Leg A</span>
+              <span class="measure-hint" data-pythag-unit-hint>Decimal feet</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="pythag-a" aria-label="Leg A">
+              <span class="unit" data-pythag-unit-label>ft</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-pythag-field="b">
+            <div class="measure-label">
+              <span class="measure-name">Leg B</span>
+              <span class="measure-hint" data-pythag-unit-hint>Decimal feet</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="pythag-b" aria-label="Leg B">
+              <span class="unit" data-pythag-unit-label>ft</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-pythag-field="c">
+            <div class="measure-label">
+              <span class="measure-name">Hypotenuse</span>
+              <span class="measure-hint" data-pythag-unit-hint>Decimal feet</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="pythag-c" aria-label="Hypotenuse">
+              <span class="unit" data-pythag-unit-label>ft</span>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="pythag-actions">
+        <button type="button" id="pythag-send-distance" class="btn-panel-action" disabled>
+          Send hypotenuse to Distance Converter
+        </button>
+      </div>
+
+      <p id="pythag-status-line" class="status-line" hidden></p>
+    </section>
+
     <footer class="footer">
       <p id="status-line" class="status-line" hidden></p>
       <details class="format-help">
@@ -406,6 +485,7 @@
           <li><strong>Calculator (Metric):</strong> enter decimal meters (e.g. <code>1.5</code> or <code>0.3048</code>)</li>
           <li><strong>Calculator (Standard):</strong> plain decimal numbers — no units, no converter export</li>
           <li><strong>Calculator (Tip):</strong> enter check amount and tip % for total, or max spend to find the highest tip within budget</li>
+          <li><strong>Pythagorean:</strong> enter any two sides of a right triangle in decimal feet or meters</li>
         </ul>
       </details>
     </footer>
@@ -879,6 +959,7 @@
   <script src="js/area-converter.js"></script>
   <script src="js/volume-converter.js"></script>
   <script src="js/construction-calculator.js"></script>
+  <script src="js/pythagorean-calculator.js"></script>
   <script type="module" src="js/point-distance.js"></script>
   <script type="module" src="js/plane-grade.js"></script>
 </body>

@@ -311,8 +311,10 @@
     diagramEl.querySelectorAll("[data-side]").forEach((node) => {
       const side = node.dataset.side;
       const value = sides[side];
-      node.textContent =
+      const formatted =
         value == null || (typeof value === "object" && value.error) ? "—" : formatDiagram(value);
+      node.textContent = formatted;
+      node.classList.toggle("is-long", formatted.length > 10);
     });
   }
 

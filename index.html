@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Dynamic Converter v1</title>
-  <link rel="stylesheet" href="css/styles.css?v=38">
+  <link rel="stylesheet" href="css/styles.css?v=39">
 </head>
 <body>
   <div class="app">
@@ -420,16 +420,25 @@
       </div>
 
       <div class="pythagorean-layout">
-        <div class="pythag-diagram-panel" id="pythag-diagram-panel" aria-hidden="true">
-          <svg class="pythag-diagram" id="pythag-diagram" viewBox="0 0 220 170" role="img" aria-label="Right triangle diagram">
-            <polygon points="30,140 170,140 170,40" fill="rgba(107, 143, 88, 0.12)" stroke="var(--accent-dim)" stroke-width="2"/>
-            <rect x="155" y="125" width="15" height="15" fill="none" stroke="var(--accent-dim)" stroke-width="1.5"/>
-            <text x="100" y="158" text-anchor="middle" class="pythag-diagram-label">A</text>
-            <text x="182" y="95" text-anchor="start" class="pythag-diagram-label">B</text>
-            <text x="88" y="78" text-anchor="end" class="pythag-diagram-label">C</text>
-            <text x="100" y="173" text-anchor="middle" class="pythag-diagram-value" data-side="a">—</text>
-            <text x="188" y="95" text-anchor="start" class="pythag-diagram-value" data-side="b">—</text>
-            <text x="78" y="72" text-anchor="end" class="pythag-diagram-value" data-side="c">—</text>
+        <div class="pythag-diagram-panel" id="pythag-diagram-panel">
+          <svg class="pythag-diagram" id="pythag-diagram" viewBox="0 0 240 210" role="img" aria-label="Right triangle diagram">
+            <polygon points="35,120 175,120 175,40" fill="rgba(107, 143, 88, 0.12)" stroke="var(--accent-dim)" stroke-width="2"/>
+            <rect x="160" y="105" width="15" height="15" fill="none" stroke="var(--accent-dim)" stroke-width="1.5"/>
+
+            <text x="105" y="150" text-anchor="middle" class="pythag-diagram-callout">
+              <tspan class="pythag-diagram-label" x="105" dy="0">Leg A</tspan>
+              <tspan class="pythag-diagram-value" data-side="a" x="105" dy="22">—</tspan>
+            </text>
+
+            <text x="192" y="72" text-anchor="start" class="pythag-diagram-callout">
+              <tspan class="pythag-diagram-label" x="192" dy="0">Leg B</tspan>
+              <tspan class="pythag-diagram-value" data-side="b" x="192" dy="22">—</tspan>
+            </text>
+
+            <text x="92" y="34" text-anchor="middle" class="pythag-diagram-callout">
+              <tspan class="pythag-diagram-label" x="92" dy="0">Hypotenuse</tspan>
+              <tspan class="pythag-diagram-value" data-side="c" x="92" dy="22">—</tspan>
+            </text>
           </svg>
           <p class="pythag-formula">a² + b² = c²</p>
         </div>

@@ -4,6 +4,7 @@ import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer
 import {
   getMetersPerPixel,
   installView3dChrome,
+  POINT_MARKER_RADIUS_SCALE,
   zoomToContent,
 } from "./view3d-ui.js";
 
@@ -138,9 +139,13 @@ export function createPlaneView3d(container, placeholderEl, chrome = {}) {
 
   function createSphere(color, radius) {
     return new THREE.Mesh(
-      new THREE.SphereGeometry(radius, 24, 24),
+      new THREE.SphereGeometry(radius * POINT_MARKER_RADIUS_SCALE, 24, 24),
       new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.05 })
     );
+  }
+
+  function pointLabelOffsetY(radius) {
+    return radius * POINT_MARKER_RADIUS_SCALE * 2.2;
   }
 
   function setPlaceholder(message, visible) {
@@ -254,7 +259,7 @@ export function createPlaneView3d(container, placeholderEl, chrome = {}) {
       contentGroup.add(sphere);
 
       const label = createLabel(pt.name || `Plane Point ${i + 1}`, "view3d-label view3d-label--plane");
-      label.position.set(pos.x, pos.y + markerR * 2.2, pos.z);
+      label.position.set(pos.x, pos.y + pointLabelOffsetY(markerR), pos.z);
       contentGroup.add(label);
     });
 
@@ -281,7 +286,7 @@ export function createPlaneView3d(container, placeholderEl, chrome = {}) {
       contentGroup.add(adjSphere);
 
       const label = createLabel(pt.name, "view3d-label view3d-label--field");
-      label.position.set(orig.x, orig.y + markerR * 2.2, orig.z);
+      label.position.set(orig.x, orig.y + pointLabelOffsetY(markerR * 0.72), orig.z);
       contentGroup.add(label);
 
       if (showMeasurements) {

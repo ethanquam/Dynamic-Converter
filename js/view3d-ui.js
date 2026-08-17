@@ -4,6 +4,9 @@ const NICE_SCALES = [
   0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000,
 ];
 
+/** Point sphere radius multiplier (0.6 = 40% smaller than base marker size). */
+export const POINT_MARKER_RADIUS_SCALE = 0.6;
+
 export function getMetersPerPixel(camera, controls, canvasHeight) {
   const distance = camera.position.distanceTo(controls.target);
   if (distance <= 0 || canvasHeight <= 0) return null;

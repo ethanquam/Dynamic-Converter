@@ -4,6 +4,7 @@ import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer
 import {
   getMetersPerPixel,
   installView3dChrome,
+  POINT_MARKER_RADIUS_SCALE,
   zoomToContent,
 } from "./view3d-ui.js";
 
@@ -162,7 +163,7 @@ export function createDistanceView3d(container, placeholderEl, chrome = {}) {
 
   function createSphere(color, radius) {
     return new THREE.Mesh(
-      new THREE.SphereGeometry(radius, 20, 20),
+      new THREE.SphereGeometry(radius * POINT_MARKER_RADIUS_SCALE, 20, 20),
       new THREE.MeshStandardMaterial({ color, roughness: 0.45 })
     );
   }
@@ -180,7 +181,7 @@ export function createDistanceView3d(container, placeholderEl, chrome = {}) {
 
     if (label) {
       const labelObj = createLabel(label, labelClass);
-      labelObj.position.set(pos.x, pos.y + radius * 2.2, pos.z);
+      labelObj.position.set(pos.x, pos.y + radius * POINT_MARKER_RADIUS_SCALE * 2.2, pos.z);
       contentGroup.add(labelObj);
     }
   }

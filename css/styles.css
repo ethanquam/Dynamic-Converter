@@ -2180,6 +2180,10 @@ button.app-nav-link {
   flex-shrink: 0;
 }
 
+.app-nav-link-text--short {
+  display: none;
+}
+
 /* Feedback modal */
 
 body.is-feedback-open {
@@ -2399,7 +2403,8 @@ body.is-feedback-open {
   }
 
   .app-nav {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
     margin: 0;
     padding: 0 0.85rem;
     background: transparent;
@@ -2412,6 +2417,7 @@ body.is-feedback-open {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    width: 100%;
   }
 
   .app-nav-links::-webkit-scrollbar {
@@ -2421,6 +2427,36 @@ body.is-feedback-open {
   .app-nav-link {
     min-height: 2.75rem;
     padding: 0.55rem 0.85rem;
+  }
+
+  .app-nav-link--feedback {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .app-nav-link-text--long {
+    display: none;
+  }
+
+  .app-nav-link-text--short {
+    display: inline;
+  }
+
+  .feedback-modal-dialog {
+    width: 100%;
+    max-height: min(92vh, 40rem);
+    padding: 1rem;
+  }
+
+  .feedback-form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .feedback-form-actions .btn-panel-action {
+    width: 100%;
+    justify-content: center;
+    min-height: 2.75rem;
   }
 
   #converter-grid,

@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Dynamic Converter v1</title>
-  <link rel="stylesheet" href="css/styles.css?v=40">
+  <link rel="stylesheet" href="css/styles.css?v=41">
 </head>
 <body>
   <div class="app">
@@ -497,14 +497,14 @@
         <div>
           <h2 id="photo-area-heading">Photo Area &amp; Volume</h2>
           <p class="section-subtitle">
-            Upload a site photo, trace the outline, calibrate with one or two known side lengths, then get area and optional volume.
+            Upload a site photo, trace the outline, enter field measurements, then record area and optional volume.
           </p>
         </div>
       </div>
 
       <p class="photo-area-hint">
-        For best results, shoot the surface as square-on as possible. Trace the outer edge of the formed area.
-        Mark up to two known edges — two measurements improve accuracy when the photo has perspective.
+        Trace the outline on your photo to label each edge, then type in tape-measure lengths from the field.
+        Angled photos distort pixel lengths — measurements are entered manually, not calculated from the image.
         Images stay on your device; nothing is uploaded to a server.
       </p>
 
@@ -527,24 +527,22 @@
           <button type="button" id="photo-area-close-shape" class="btn-panel-action" disabled>Close shape</button>
           <button type="button" id="photo-area-clear" class="btn-panel-action btn-panel-action--muted" disabled>Clear trace</button>
         </div>
-        <p class="photo-area-trace-hint">Click or tap to place corners. Drag points to adjust. Click the first point or Close shape when done.</p>
+        <p class="photo-area-trace-hint">Click or tap to place corners. Drag points to adjust. Click the first point or Close shape when done. After closing, tap an edge on the photo to identify it in the table.</p>
         <div class="photo-area-canvas-wrap" id="photo-area-canvas-wrap">
           <canvas id="photo-area-canvas" aria-label="Photo trace canvas"></canvas>
         </div>
       </div>
 
       <div class="photo-area-edges-panel" id="photo-area-edges-panel" hidden>
-        <h3 class="photo-area-edges-title">Edge calibration</h3>
-        <p class="photo-area-edges-note">Check up to two edges with known lengths. Other edges show estimated lengths after calibration.</p>
+        <h3 class="photo-area-edges-title">Edge measurements</h3>
+        <p class="photo-area-edges-note"><strong>E1</strong> is points 1→2, <strong>E2</strong> is 2→3, and so on. Photo (px) is for reference only — enter each edge length from your tape measure. Hover or tap a row/edge to highlight it.</p>
         <div class="photo-area-edges-table-wrap">
           <table class="photo-area-edges-table" aria-label="Polygon edge measurements">
             <thead>
               <tr>
                 <th scope="col">Edge</th>
-                <th scope="col">On photo</th>
-                <th scope="col">Known</th>
-                <th scope="col">Real length</th>
-                <th scope="col">Estimate</th>
+                <th scope="col">Photo (px)</th>
+                <th scope="col">Measured length</th>
               </tr>
             </thead>
             <tbody id="photo-area-edges-body"></tbody>
@@ -553,10 +551,13 @@
       </div>
 
       <div class="photo-area-results">
-        <div class="photo-area-result-row">
-          <span class="photo-area-result-label">Surface area</span>
-          <span class="photo-area-result-value" id="photo-area-result-area">—</span>
-        </div>
+        <label class="photo-area-depth-field" for="photo-area-area">
+          <span class="photo-area-result-label">Surface area <span class="photo-area-depth-hint" data-photo-area-area-hint>Decimal ft²</span></span>
+          <div class="measure-input-wrap">
+            <input type="text" id="photo-area-area" inputmode="decimal" autocomplete="off" spellcheck="false"
+                   aria-label="Surface area" placeholder="From field measurement">
+          </div>
+        </label>
         <label class="photo-area-depth-field" for="photo-area-depth">
           <span class="photo-area-result-label">Depth <span class="photo-area-depth-hint" data-photo-area-unit-hint>Decimal feet</span></span>
           <div class="measure-input-wrap">
@@ -596,7 +597,7 @@
           <li><strong>Calculator (Standard):</strong> plain decimal numbers — no units, no converter export</li>
           <li><strong>Calculator (Tip):</strong> enter check amount and tip % for total, or max spend to find the highest tip within budget</li>
           <li><strong>Pythagorean:</strong> decimal feet or meters, or feet/inches like <code>3&#39;-4 1/2&quot;</code></li>
-          <li><strong>Photo Area:</strong> upload a photo, trace the outline, calibrate with one or two known edge lengths in decimal ft or m</li>
+          <li><strong>Photo Area:</strong> upload a photo, trace the outline, enter field edge lengths and surface area manually (decimal ft or m)</li>
         </ul>
       </details>
     </footer>

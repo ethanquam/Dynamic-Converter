@@ -6,11 +6,8 @@
   const M3_PER_CU_FT = METERS_PER_FOOT ** 3;
   const HANDLE_RADIUS = 12;
   const CLOSE_SNAP_PX = 16;
-  const SCALE_MISMATCH_WARN = 0.08;
-  const MAX_KNOWN_EDGES = 2;
 
   const canvas = document.getElementById("photo-area-canvas");
-  const canvasWrap = document.getElementById("photo-area-canvas-wrap");
   const fileInput = document.getElementById("photo-area-file-input");
   const fileNameEl = document.getElementById("photo-area-file-name");
   const workspaceEl = document.getElementById("photo-area-workspace");
@@ -20,7 +17,7 @@
   const closeBtn = document.getElementById("photo-area-close-shape");
   const clearBtn = document.getElementById("photo-area-clear");
   const statusLine = document.getElementById("photo-area-status-line");
-  const resultAreaEl = document.getElementById("photo-area-result-area");
+  const areaInput = document.getElementById("photo-area-area");
   const resultVolumeEl = document.getElementById("photo-area-result-volume");
   const depthInput = document.getElementById("photo-area-depth");
   const sendAreaBtn = document.getElementById("photo-area-send-area");
@@ -35,9 +32,9 @@
     closed: false,
     edges: [],
     dragIndex: null,
+    highlightedEdgeIndex: null,
     areaSquareMeters: null,
     volumeCubicMeters: null,
-    metersPerPixel: null,
   };
 
   function setStatus(message, isError = false) {
@@ -47,29 +44,29 @@
     statusLine.classList.toggle("is-error", isError);
   }
 
-  function parseLength(text) {
+  function parseNumber(text) {
     const trimmed = text.trim();
     if (!trimmed) return { empty: true };
     const value = Number(trimmed.replace(/,/g, ""));
     if (!Number.isFinite(value) || value < 0) {
       return { error: "Enter a valid non-negative number." };
     }
-    const meters = state.unitSystem === "metric" ? value : value * METERS_PER_FOOT;
+    return { value };
+  }
+
+  function parseLength(text) {
+    const parsed = parseNumber(text);
+    if (parsed.empty || parsed.error) return parsed;
+    const meters = state.unitSystem === "metric" ? parsed.value : parsed.value * METERS_PER_FOOT;
     return { meters };
   }
 
-  function formatLength(meters) {
-    if (!Number.isFinite(meters)) return "—";
-    const value = state.unitSystem === "metric" ? meters : meters / METERS_PER_FOOT;
-    return `${Number(value.toFixed(4))} ${state.unitSystem === "metric" ? "m" : "ft"}`;
-  }
-
-  function formatArea(squareMeters) {
-    if (!Number.isFinite(squareMeters)) return "—";
-    if (state.unitSystem === "metric") {
-      return `${Number(squareMeters.toFixed(4))} m²`;
-    }
-    return `${Number((squareMeters / M2_PER_SQ_FT).toFixed(4))} ft²`;
+  function parseArea(text) {
+    const parsed = parseNumber(text);
+    if (parsed.empty || parsed.error) return parsed;
+    const squareMeters =
+      state.unitSystem === "metric" ? parsed.value : parsed.value * M2_PER_SQ_FT;
+    return { squareMeters };
   }
 
   function formatVolume(cubicMeters) {
@@ -82,6 +79,10 @@
 
   function unitHint() {
     return state.unitSystem === "metric" ? "Decimal meters" : "Decimal feet";
+  }
+
+  function areaHint() {
+    return state.unitSystem === "metric" ? "Decimal m²" : "Decimal ft²";
   }
 
   function canvasPoint(event) {
@@ -102,14 +103,86 @@
     return Math.hypot(b.x - a.x, b.y - a.y);
   }
 
-  function shoelaceArea(vertices) {
-    if (vertices.length < 3) return 0;
-    let sum = 0;
-    for (let i = 0; i < vertices.length; i += 1) {
-      const j = (i + 1) % vertices.length;
-      sum += vertices[i].x * vertices[j].y - vertices[j].x * vertices[i].y;
+  function edgeEndpointLabels(edgeIndex) {
+    const n = state.vertices.length;
+    const from = edgeIndex + 1;
+    const to = ((edgeIndex + 1) % n) + 1;
+    return { from, to };
+  }
+
+  function edgeGeometry(edgeIndex) {
+    const verts = state.vertices;
+    const n = verts.length;
+    const j = (edgeIndex + 1) % n;
+    const a = verts[edgeIndex];
+    const b = verts[j];
+    const mid = {
+      x: (a.x + b.x) * 0.5,
+      y: (a.y + b.y) * 0.5,
+    };
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len = Math.hypot(dx, dy) || 1;
+    let nx = -dy / len;
+    let ny = dx / len;
+    const cx = verts.reduce((sum, v) => sum + v.x, 0) / n;
+    const cy = verts.reduce((sum, v) => sum + v.y, 0) / n;
+    if ((cx - mid.x) * nx + (cy - mid.y) * ny < 0) {
+      nx = -nx;
+      ny = -ny;
     }
-    return Math.abs(sum) * 0.5;
+    const offset = Math.max(12, canvas.width / 90);
+    let angle = Math.atan2(dy, dx);
+    if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI;
+    return {
+      a,
+      b,
+      mid,
+      len,
+      angle,
+      labelPoint: {
+        x: mid.x + nx * offset,
+        y: mid.y + ny * offset,
+      },
+    };
+  }
+
+  function pointToSegmentDistance(point, a, b) {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return distance(point, a);
+    let t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
+    return distance(point, {
+      x: a.x + t * dx,
+      y: a.y + t * dy,
+    });
+  }
+
+  function hitEdge(point) {
+    if (!state.closed || state.edges.length === 0) return -1;
+    const threshold = Math.max(14, canvas.width / 120);
+    let bestIndex = -1;
+    let bestDistance = threshold;
+    state.edges.forEach((_edge, index) => {
+      const { a, b } = edgeGeometry(index);
+      const dist = pointToSegmentDistance(point, a, b);
+      if (dist < bestDistance) {
+        bestDistance = dist;
+        bestIndex = index;
+      }
+    });
+    return bestIndex;
+  }
+
+  function setHighlightedEdge(edgeIndex) {
+    state.highlightedEdgeIndex = edgeIndex;
+    draw();
+    if (!edgesBodyEl) return;
+    Array.from(edgesBodyEl.rows).forEach((row, index) => {
+      row.classList.toggle("is-highlighted", index === edgeIndex);
+    });
   }
 
   function rebuildEdges() {
@@ -125,7 +198,6 @@
       state.edges.push({
         index: i,
         pixelLength: distance(state.vertices[i], state.vertices[j]),
-        known: old?.known ?? false,
         lengthText: old?.lengthText ?? "",
       });
     }
@@ -136,9 +208,7 @@
     state.edges.forEach((edge, rowIndex) => {
       const row = edgesBodyEl.rows[rowIndex];
       if (!row) return;
-      const knownInput = row.querySelector("[data-edge-known]");
       const lengthInput = row.querySelector("[data-edge-length]");
-      edge.known = Boolean(knownInput?.checked);
       edge.lengthText = lengthInput?.value ?? "";
     });
   }
@@ -149,6 +219,10 @@
       const cell = edgesBodyEl.rows[index]?.cells[1];
       if (cell) cell.textContent = `${edge.pixelLength.toFixed(1)} px`;
     });
+  }
+
+  function measuredEdgeCount() {
+    return state.edges.filter((edge) => edge.lengthText.trim()).length;
   }
 
   function renderEdgesTable() {
@@ -164,149 +238,106 @@
     if (edgesPanelEl) edgesPanelEl.hidden = false;
 
     state.edges.forEach((edge, index) => {
+      const { from, to } = edgeEndpointLabels(index);
       const row = document.createElement("tr");
+      row.dataset.edgeIndex = String(index);
       row.innerHTML = `
-        <td>Edge ${index + 1}</td>
-        <td class="photo-area-edges-pixel">${edge.pixelLength.toFixed(1)} px</td>
-        <td class="photo-area-edges-known">
-          <label class="photo-area-known-label">
-            <input type="checkbox" data-edge-known ${edge.known ? "checked" : ""}>
-            <span>Known</span>
-          </label>
+        <td class="photo-area-edge-id">
+          <span class="photo-area-edge-badge">E${index + 1}</span>
+          <span class="photo-area-edge-endpoints">${from}→${to}</span>
         </td>
+        <td class="photo-area-edges-pixel">${edge.pixelLength.toFixed(1)} px</td>
         <td>
           <input type="text" class="photo-area-edge-length" data-edge-length
                  inputmode="decimal" autocomplete="off" spellcheck="false"
-                 placeholder="${unitHint()}" value="${edge.lengthText.replace(/"/g, "&quot;")}">
+                 placeholder="${unitHint()}" value="${edge.lengthText.replace(/"/g, "&quot;")}"
+                 aria-label="Measured length for edge ${index + 1}">
         </td>
-        <td class="photo-area-edges-estimate" data-edge-estimate>—</td>
       `;
 
-      const knownInput = row.querySelector("[data-edge-known]");
       const lengthInput = row.querySelector("[data-edge-length]");
-
-      knownInput?.addEventListener("change", () => {
-        const checkedCount = Array.from(
-          edgesBodyEl.querySelectorAll("[data-edge-known]")
-        ).filter((input) => input.checked).length;
-        if (knownInput.checked && checkedCount > MAX_KNOWN_EDGES) {
-          knownInput.checked = false;
-          setStatus(`Mark at most ${MAX_KNOWN_EDGES} known edges for calibration.`, true);
-          return;
-        }
-        edge.known = knownInput.checked;
-        computeResults();
-      });
 
       lengthInput?.addEventListener("input", () => {
         edge.lengthText = lengthInput.value;
-        computeResults();
+        updateOverallStatus();
+        draw();
+      });
+
+      row.addEventListener("mouseenter", () => setHighlightedEdge(index));
+      row.addEventListener("mouseleave", () => setHighlightedEdge(null));
+      row.addEventListener("focusin", () => setHighlightedEdge(index));
+      row.addEventListener("focusout", (event) => {
+        if (row.contains(event.relatedTarget)) return;
+        setHighlightedEdge(null);
       });
 
       edgesBodyEl.appendChild(row);
     });
 
-    computeResults();
+    updateOverallStatus();
+  }
+
+  function updateOverallStatus() {
+    if (!state.closed) return;
+
+    const filled = measuredEdgeCount();
+    const total = state.edges.length;
+    const hasArea = state.areaSquareMeters != null && state.areaSquareMeters > 0;
+
+    if (hasArea && state.volumeCubicMeters != null && state.volumeCubicMeters > 0) {
+      setStatus("Area and volume ready — send to the converters when you are done.");
+      return;
+    }
+    if (hasArea) {
+      setStatus("Surface area entered. Add depth for volume, or send area to the Area Converter.");
+      return;
+    }
+    if (filled === 0) {
+      setStatus("Enter field measurements for each edge, then add surface area below.");
+      return;
+    }
+    if (filled < total) {
+      setStatus(`${filled} of ${total} edges measured — enter the remaining lengths from your tape measure.`);
+      return;
+    }
+    setStatus("All edge lengths entered. Add surface area from your field measurement.");
   }
 
   function computeResults() {
-    syncEdgesFromDom();
-
     state.areaSquareMeters = null;
     state.volumeCubicMeters = null;
-    state.metersPerPixel = null;
 
-    if (!state.closed || state.vertices.length < 3) {
+    const areaParsed = parseArea(areaInput?.value ?? "");
+    if (areaParsed.error) {
+      setStatus(areaParsed.error, true);
       updateResultDisplay();
       return;
     }
 
-    const areaPx = shoelaceArea(state.vertices);
-    const knownEdges = state.edges
-      .map((edge, index) => ({ edge, index }))
-      .filter(({ edge }) => edge.known);
-
-    if (knownEdges.length === 0) {
-      setStatus("Mark one or two known edges and enter their real-world lengths.");
-      updateEstimates(null);
-      updateResultDisplay();
-      return;
+    if (!areaParsed.empty && areaParsed.squareMeters > 0) {
+      state.areaSquareMeters = areaParsed.squareMeters;
     }
-
-    const scales = [];
-    for (const { edge } of knownEdges) {
-      const parsed = parseLength(edge.lengthText);
-      if (parsed.error) {
-        setStatus(parsed.error, true);
-        updateResultDisplay();
-        return;
-      }
-      if (parsed.empty || edge.pixelLength <= 0) {
-        setStatus("Enter a length for each known edge.", true);
-        updateResultDisplay();
-        return;
-      }
-      scales.push({
-        metersPerPixel: parsed.meters / edge.pixelLength,
-        pixelLength: edge.pixelLength,
-      });
-    }
-
-    let metersPerPixel;
-    if (scales.length === 1) {
-      metersPerPixel = scales[0].metersPerPixel;
-    } else {
-      const totalPixels = scales[0].pixelLength + scales[1].pixelLength;
-      metersPerPixel =
-        (scales[0].metersPerPixel * scales[0].pixelLength +
-          scales[1].metersPerPixel * scales[1].pixelLength) /
-        totalPixels;
-      const diff = Math.abs(scales[0].metersPerPixel - scales[1].metersPerPixel);
-      const avg = (scales[0].metersPerPixel + scales[1].metersPerPixel) * 0.5;
-      if (avg > 0 && diff / avg > SCALE_MISMATCH_WARN) {
-        setStatus(
-          "The two known edges suggest different scales — check your trace or photo angle (perspective).",
-          true
-        );
-      } else {
-        setStatus("Area calculated from traced shape and known edge lengths.");
-      }
-    }
-
-    if (scales.length === 1) {
-      setStatus("Area calculated from traced shape and known edge length.");
-    }
-
-    state.metersPerPixel = metersPerPixel;
-    state.areaSquareMeters = areaPx * metersPerPixel * metersPerPixel;
 
     const depthParsed = parseLength(depthInput?.value ?? "");
-    if (!depthParsed.empty && !depthParsed.error && depthParsed.meters > 0) {
+    if (depthParsed.error) {
+      setStatus(depthParsed.error, true);
+      updateResultDisplay();
+      return;
+    }
+
+    if (
+      state.areaSquareMeters != null &&
+      !depthParsed.empty &&
+      depthParsed.meters > 0
+    ) {
       state.volumeCubicMeters = state.areaSquareMeters * depthParsed.meters;
     }
 
-    updateEstimates(metersPerPixel);
     updateResultDisplay();
-  }
-
-  function updateEstimates(metersPerPixel) {
-    if (!edgesBodyEl) return;
-    state.edges.forEach((edge, index) => {
-      const cell = edgesBodyEl.rows[index]?.querySelector("[data-edge-estimate]");
-      if (!cell) return;
-      if (!metersPerPixel) {
-        cell.textContent = "—";
-        return;
-      }
-      const meters = edge.pixelLength * metersPerPixel;
-      cell.textContent = formatLength(meters);
-    });
+    updateOverallStatus();
   }
 
   function updateResultDisplay() {
-    if (resultAreaEl) {
-      resultAreaEl.textContent = formatArea(state.areaSquareMeters);
-    }
     if (resultVolumeEl) {
       resultVolumeEl.textContent = formatVolume(state.volumeCubicMeters);
     }
@@ -316,6 +347,77 @@
     if (sendVolumeBtn) {
       sendVolumeBtn.disabled = !(state.volumeCubicMeters != null && state.volumeCubicMeters > 0);
     }
+  }
+
+  function drawEdgeSegment(ctx, edgeIndex, style) {
+    const verts = state.vertices;
+    const j = (edgeIndex + 1) % verts.length;
+    ctx.beginPath();
+    ctx.moveTo(verts[edgeIndex].x, verts[edgeIndex].y);
+    ctx.lineTo(verts[j].x, verts[j].y);
+    ctx.strokeStyle = style.stroke;
+    ctx.lineWidth = style.lineWidth;
+    if (style.dash) {
+      ctx.setLineDash(style.dash);
+    } else {
+      ctx.setLineDash([]);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawEdgeLabels(ctx) {
+    const fontSize = Math.max(11, canvas.width / 75);
+
+    state.edges.forEach((edge, index) => {
+      const { labelPoint, angle } = edgeGeometry(index);
+      const isHighlighted =
+        state.highlightedEdgeIndex == null || state.highlightedEdgeIndex === index;
+      const hasMeasurement = Boolean(edge.lengthText.trim());
+      const label = `E${index + 1}`;
+      const pxLabel = `${Math.round(edge.pixelLength)} px`;
+
+      ctx.save();
+      ctx.translate(labelPoint.x, labelPoint.y);
+      ctx.rotate(angle);
+
+      ctx.font = `bold ${fontSize}px Segoe UI, system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      const titleW = ctx.measureText(label).width;
+      ctx.font = `${Math.max(9, fontSize * 0.78)}px Segoe UI, system-ui, sans-serif`;
+      const subW = ctx.measureText(pxLabel).width;
+      const boxW = Math.max(titleW, subW) + fontSize * 0.9;
+      const boxH = fontSize * 1.85;
+      const x = -boxW * 0.5;
+      const y = -boxH * 0.5;
+
+      ctx.fillStyle = isHighlighted ? "rgba(255, 255, 255, 0.96)" : "rgba(255, 255, 255, 0.82)";
+      ctx.strokeStyle = hasMeasurement
+        ? "#2f4a24"
+        : isHighlighted
+          ? "#2f4a24"
+          : "rgba(82, 122, 66, 0.65)";
+      ctx.lineWidth = Math.max(1.5, canvas.width / 600);
+      if (typeof ctx.roundRect === "function") {
+        ctx.beginPath();
+        ctx.roundRect(x, y, boxW, boxH, boxH * 0.3);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(x, y, boxW, boxH);
+        ctx.strokeRect(x, y, boxW, boxH);
+      }
+
+      ctx.fillStyle = "#2f4a24";
+      ctx.font = `bold ${fontSize}px Segoe UI, system-ui, sans-serif`;
+      ctx.fillText(label, 0, -fontSize * 0.22);
+      ctx.font = `${Math.max(9, fontSize * 0.78)}px Segoe UI, system-ui, sans-serif`;
+      ctx.fillStyle = "#527a42";
+      ctx.fillText(pxLabel, 0, fontSize * 0.48);
+      ctx.restore();
+    });
   }
 
   function draw() {
@@ -329,19 +431,42 @@
     const verts = state.vertices;
     if (verts.length === 0) return;
 
-    ctx.lineWidth = Math.max(2, canvas.width / 400);
-    ctx.strokeStyle = "#527a42";
+    const baseLineWidth = Math.max(2, canvas.width / 400);
     ctx.fillStyle = "rgba(107, 143, 88, 0.22)";
 
-    if (verts.length >= 2) {
+    if (state.closed && verts.length >= 3) {
       ctx.beginPath();
       ctx.moveTo(verts[0].x, verts[0].y);
       for (let i = 1; i < verts.length; i += 1) {
         ctx.lineTo(verts[i].x, verts[i].y);
       }
-      if (state.closed) {
-        ctx.closePath();
-        ctx.fill();
+      ctx.closePath();
+      ctx.fill();
+
+      for (let i = 0; i < verts.length; i += 1) {
+        const highlighted = state.highlightedEdgeIndex === i;
+        const dimmed = state.highlightedEdgeIndex != null && !highlighted;
+        const measured = Boolean(state.edges[i]?.lengthText.trim());
+        drawEdgeSegment(ctx, i, {
+          stroke: highlighted
+            ? "#2f4a24"
+            : measured
+              ? "#3d6230"
+              : dimmed
+                ? "rgba(82, 122, 66, 0.35)"
+                : "#527a42",
+          lineWidth: highlighted ? baseLineWidth * 1.8 : baseLineWidth,
+        });
+      }
+
+      drawEdgeLabels(ctx);
+    } else if (verts.length >= 2) {
+      ctx.lineWidth = baseLineWidth;
+      ctx.strokeStyle = "#527a42";
+      ctx.beginPath();
+      ctx.moveTo(verts[0].x, verts[0].y);
+      for (let i = 1; i < verts.length; i += 1) {
+        ctx.lineTo(verts[i].x, verts[i].y);
       }
       ctx.stroke();
     }
@@ -393,7 +518,7 @@
     renderEdgesTable();
     draw();
     updateToolbar();
-    setStatus("Shape closed — mark known edge lengths below.");
+    setStatus("Enter field measurements for each edge in the table below.");
   }
 
   function updateToolbar() {
@@ -408,7 +533,7 @@
     state.edges = [];
     state.areaSquareMeters = null;
     state.volumeCubicMeters = null;
-    state.metersPerPixel = null;
+    state.highlightedEdgeIndex = null;
     if (edgesPanelEl) edgesPanelEl.hidden = true;
     if (edgesBodyEl) edgesBodyEl.innerHTML = "";
     updateResultDisplay();
@@ -453,7 +578,17 @@
       return;
     }
 
-    if (state.closed) return;
+    if (state.closed) {
+      const edgeHit = hitEdge(point);
+      if (edgeHit >= 0) {
+        setHighlightedEdge(edgeHit);
+        edgesBodyEl?.rows[edgeHit]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        const lengthInput = edgesBodyEl?.rows[edgeHit]?.querySelector("[data-edge-length]");
+        lengthInput?.focus();
+        return;
+      }
+      return;
+    }
 
     if (
       state.vertices.length >= 3 &&
@@ -484,7 +619,6 @@
     draw();
     if (state.closed) {
       updateEdgePixelCells();
-      computeResults();
     }
   }
 
@@ -509,6 +643,9 @@
     });
     document.querySelectorAll("[data-photo-area-unit-hint]").forEach((el) => {
       el.textContent = unitHint();
+    });
+    document.querySelectorAll("[data-photo-area-area-hint]").forEach((el) => {
+      el.textContent = areaHint();
     });
     renderEdgesTable();
     computeResults();
@@ -540,6 +677,7 @@
     if (workspaceEl) workspaceEl.hidden = true;
     if (fileInput) fileInput.value = "";
     if (fileNameEl) fileNameEl.textContent = "No photo selected";
+    if (areaInput) areaInput.value = "";
     if (depthInput) depthInput.value = "";
     setStatus("");
   }
@@ -569,6 +707,7 @@
   canvas?.addEventListener("pointerup", onPointerUp);
   canvas?.addEventListener("pointercancel", onPointerUp);
 
+  areaInput?.addEventListener("input", computeResults);
   depthInput?.addEventListener("input", computeResults);
 
   unitTabs.forEach((tab) => {

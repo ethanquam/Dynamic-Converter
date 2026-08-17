@@ -928,6 +928,247 @@ body.is-scroll-locked {
   cursor: not-allowed;
 }
 
+.photo-area-section {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.photo-area-section .status-line {
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}
+
+.photo-area-hint {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.photo-area-input-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0.35rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.photo-area-input-tab {
+  padding: 0.55rem 0.65rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+}
+
+.photo-area-input-tab.is-active {
+  color: var(--text-on-accent);
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+}
+
+.photo-area-upload-panel {
+  margin-bottom: 1rem;
+}
+
+.photo-area-file-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+}
+
+.photo-area-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.photo-area-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.photo-area-trace-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.photo-area-canvas-wrap {
+  position: relative;
+  width: 100%;
+  min-height: clamp(240px, 45vh, 480px);
+  max-height: 70vh;
+  overflow: auto;
+  touch-action: none;
+  background: #1a2420;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+#photo-area-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.photo-area-edges-panel {
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.photo-area-edges-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.photo-area-edges-note {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.photo-area-edges-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.photo-area-edges-table {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.photo-area-edges-table th,
+.photo-area-edges-table td {
+  padding: 0.45rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.photo-area-edges-table th {
+  font-size: 0.72rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.photo-area-known-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.photo-area-known-label input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.photo-area-edge-length {
+  width: 100%;
+  min-width: 5.5rem;
+  padding: 0.45rem 0.55rem;
+  font: inherit;
+  font-size: 0.82rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--surface);
+}
+
+.photo-area-edge-length:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.photo-area-edges-estimate {
+  font-family: var(--mono);
+  color: var(--accent-dim);
+  white-space: nowrap;
+}
+
+.photo-area-results {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.photo-area-result-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.photo-area-result-label {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--text-muted);
+}
+
+.photo-area-result-value {
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 650;
+  color: var(--accent-dim);
+}
+
+.photo-area-depth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.photo-area-depth-hint {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.photo-area-depth-field .measure-input-wrap {
+  max-width: 14rem;
+}
+
+.photo-area-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.photo-area-actions .btn-panel-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .measure-row {
   display: grid;
   grid-template-columns: 1fr;
@@ -2478,6 +2719,7 @@ body.is-feedback-open {
 .volume-converter-section,
 .construction-calc-section,
 .pythagorean-section,
+.photo-area-section,
 .point-distance-section,
 .plane-grade-section {
   scroll-margin-top: var(--sticky-offset);
@@ -2653,6 +2895,7 @@ body.is-feedback-open {
   .volume-converter-section,
   .construction-calc-section,
   .pythagorean-section,
+  .photo-area-section,
   .point-distance-section,
   .plane-grade-section {
     scroll-margin-top: var(--sticky-offset);
@@ -2701,6 +2944,7 @@ body.is-feedback-open {
   .volume-converter-section,
   .construction-calc-section,
   .pythagorean-section,
+  .photo-area-section,
   .point-distance-section,
   .plane-grade-section {
     margin-top: 1.75rem;

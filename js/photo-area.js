@@ -5,8 +5,9 @@
   const METERS_PER_INCH = METERS_PER_FOOT / 12;
   const M2_PER_SQ_FT = METERS_PER_FOOT ** 2;
   const M3_PER_CU_FT = METERS_PER_FOOT ** 3;
-  const HANDLE_RADIUS = 12;
-  const CLOSE_SNAP_PX = 16;
+  const isCoarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+  const HANDLE_RADIUS = isCoarsePointer ? 18 : 12;
+  const CLOSE_SNAP_PX = isCoarsePointer ? 22 : 16;
   const CLOSURE_OVERLAY_MAX_METERS = 0.25;
 
   const canvas = document.getElementById("photo-area-canvas");
@@ -25,9 +26,16 @@
   const sendAreaBtn = document.getElementById("photo-area-send-area");
   const sendVolumeBtn = document.getElementById("photo-area-send-volume");
   const computeFinalEdgeBtn = document.getElementById("photo-area-compute-final-edge");
-  const loadExampleBtn = document.getElementById("photo-area-load-example");
   const traceHintEl = document.getElementById("photo-area-trace-hint");
+  const toolbarEl = document.getElementById("photo-area-toolbar");
+  const canvasWrapEl = document.getElementById("photo-area-canvas-wrap");
+  const edgesNoteEl = document.getElementById("photo-area-edges-note");
+  const edgesActionsEl = document.querySelector(".photo-area-edges-actions");
+  const resultsEl = document.querySelector(".photo-area-results");
   const unitTabs = document.querySelectorAll("[data-photo-area-units]");
+  const DEFAULT_EDGES_NOTE =
+    edgesNoteEl?.textContent?.trim() ||
+    "Enter all but one edge, then click Compute final edge — the result is marked orange Check for field verification.";
 
   const state = {
     unitSystem: "imperial",
@@ -46,6 +54,8 @@
     averageMetersPerPixel: null,
     areaManualOverride: false,
     computeFinalEdge: false,
+    exampleActive: false,
+    exampleStatic: false,
   };
 
   function setStatus(message, isError = false) {
@@ -666,12 +676,12 @@
       row.dataset.edgeIndex = String(index);
       if (isAuto) row.classList.add("is-auto-edge");
       row.innerHTML = `
-        <td class="photo-area-edge-id">
+        <td class="photo-area-edge-id" data-label="Edge">
           <span class="photo-area-edge-badge">E${index + 1}</span>
           <span class="photo-area-edge-endpoints">${from}→${to}</span>
         </td>
-        <td class="photo-area-edges-pixel">${edge.pixelLength.toFixed(1)} px</td>
-        <td class="photo-area-edge-length-cell">
+        <td class="photo-area-edges-pixel" data-label="Photo (px)">${edge.pixelLength.toFixed(1)} px</td>
+        <td class="photo-area-edge-length-cell" data-label="Measured length">
           <input type="text" class="photo-area-edge-length${isAuto ? " photo-area-edge-length--auto" : ""}" data-edge-length
                  inputmode="decimal" autocomplete="off" spellcheck="false"
                  placeholder="${unitHint()}" value="${displayValue}"
@@ -713,6 +723,7 @@
   }
 
   function updateOverallStatus() {
+    if (state.exampleStatic) return;
     if (!state.closed) return;
 
     const filled = measuredEdgeCount();
@@ -977,6 +988,8 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(state.image, 0, 0, canvas.width, canvas.height);
 
+    if (state.exampleStatic) return;
+
     const verts = state.vertices;
     if (verts.length === 0) return;
 
@@ -1124,6 +1137,9 @@
       if (onReady) {
         onReady();
       } else {
+        state.exampleActive = false;
+        state.exampleStatic = false;
+        setExampleViewMode(false);
         resetPolygon();
         if (fileNameEl) fileNameEl.textContent = file.name;
         setStatus("Tap or click the photo to place corner points along the outline.");
@@ -1137,7 +1153,106 @@
     img.src = state.imageUrl;
   }
 
+  function setExampleViewMode(isStatic) {
+    workspaceEl?.classList.toggle("photo-area-workspace--static", isStatic);
+    if (traceHintEl) traceHintEl.hidden = isStatic;
+    canvasWrapEl?.classList.toggle("photo-area-canvas-wrap--static", isStatic);
+    if (edgesNoteEl) {
+      edgesNoteEl.textContent = isStatic
+        ? "Sample field measurements from the walkway example — upload your own photo to trace and measure."
+        : DEFAULT_EDGES_NOTE;
+    }
+    resultsEl?.classList.toggle("photo-area-results--example", isStatic);
+    if (areaInput) {
+      areaInput.readOnly = isStatic;
+      areaInput.classList.toggle("photo-area-edge-length--example", isStatic);
+    }
+    if (depthInput) {
+      depthInput.readOnly = isStatic;
+      depthInput.classList.toggle("photo-area-edge-length--example", isStatic);
+    }
+    if (edgesActionsEl) edgesActionsEl.hidden = isStatic;
+    if (computeFinalEdgeBtn) {
+      computeFinalEdgeBtn.hidden = isStatic;
+      computeFinalEdgeBtn.disabled = isStatic;
+    }
+    if (!isStatic) {
+      updateComputeFinalEdgeButton();
+    }
+  }
+
+  function renderStaticExampleTable(example) {
+    if (!edgesBodyEl || !edgesPanelEl) return;
+    edgesPanelEl.hidden = false;
+    edgesBodyEl.innerHTML = "";
+
+    (example.edges || []).forEach((edge, index) => {
+      const row = document.createElement("tr");
+      row.classList.add("is-example-edge");
+      if (edge.isCheck) row.classList.add("is-auto-edge");
+      const safeValue = (edge.lengthText ?? "").replace(/"/g, "&quot;");
+      row.innerHTML = `
+        <td class="photo-area-edge-id" data-label="Edge">
+          <span class="photo-area-edge-badge">E${index + 1}</span>
+          <span class="photo-area-edge-endpoints">${edge.from}→${edge.to}</span>
+        </td>
+        <td class="photo-area-edges-pixel" data-label="Photo (px)">${Number(edge.pixelLength).toFixed(1)} px</td>
+        <td class="photo-area-edge-length-cell" data-label="Measured length">
+          <input type="text" class="photo-area-edge-length photo-area-edge-length--example${edge.isCheck ? " photo-area-edge-length--auto" : ""}"
+                 value="${safeValue}" readonly tabindex="-1"
+                 aria-label="Example measured length for edge ${index + 1}${edge.isCheck ? " (computed check edge)" : ""}">
+          ${edge.isCheck ? '<span class="photo-area-auto-badge" title="Computed sanity-check edge in the example">Check</span>' : '<span class="photo-area-example-badge">Example</span>'}
+        </td>
+      `;
+      edgesBodyEl.appendChild(row);
+    });
+  }
+
+  function applyStaticExampleResults(example) {
+    state.areaManualOverride = true;
+    state.areaSquareMeters =
+      example.areaSquareFeet != null ? example.areaSquareFeet * M2_PER_SQ_FT : null;
+    state.volumeCubicMeters =
+      example.volumeCubicFeet != null ? example.volumeCubicFeet * M3_PER_CU_FT : null;
+
+    if (areaInput) {
+      areaInput.value =
+        example.areaSquareFeet != null ? String(example.areaSquareFeet) : "";
+    }
+    if (depthInput) {
+      depthInput.value = example.depth ?? "";
+    }
+
+    updateResultDisplay();
+  }
+
+  function applyStaticExampleState(example) {
+    setUnitSystem(example.unitSystem || "imperial");
+    state.exampleStatic = true;
+    state.vertices = [];
+    state.closed = false;
+    state.edges = [];
+    state.highlightedEdgeIndex = null;
+    state.computeFinalEdge = false;
+    state.autoEdgeIndex = null;
+    state.autoEdgeMeters = null;
+    state.closureGapMeters = null;
+
+    renderStaticExampleTable(example);
+    applyStaticExampleResults(example);
+    setExampleViewMode(true);
+    updateToolbar();
+    draw();
+  }
+
   function applyExampleState(example) {
+    if (example.static) {
+      applyStaticExampleState(example.referenceSnapshot || example);
+      return;
+    }
+
+    state.exampleStatic = false;
+    setExampleViewMode(false);
     setUnitSystem(example.unitSystem || "imperial");
     const width = canvas?.width ?? state.image?.naturalWidth ?? 1;
     const height = canvas?.height ?? state.image?.naturalHeight ?? 1;
@@ -1176,7 +1291,7 @@
     }
   }
 
-  async function loadExampleData() {
+  async function loadExampleData({ auto = false } = {}) {
     if (!window.ExampleData?.getPhotoAreaExample) {
       setStatus("Example data module failed to load.", true);
       return;
@@ -1204,11 +1319,14 @@
       if (fileInput) fileInput.value = "";
       loadImage(file, () => {
         applyExampleState(example);
+        state.exampleActive = true;
         if (fileNameEl) {
           fileNameEl.textContent = `Example: ${example.label}`;
         }
         setStatus(
-          `Loaded example (${example.label}). E2 is left blank — compare the orange Check edge against your tape, then review area and volume.`
+          auto
+            ? `Example loaded (${example.label}). Sample measurements are shown below — choose your photo to start a live trace.`
+            : `Loaded example (${example.label}). Sample measurements are shown below — choose your photo to start a live trace.`
         );
       });
     } catch (error) {
@@ -1217,7 +1335,7 @@
   }
 
   function onPointerDown(event) {
-    if (!state.image || !canvas) return;
+    if (!state.image || !canvas || state.exampleStatic) return;
     event.preventDefault();
     const point = canvasPoint(event);
     if (!point) return;
@@ -1327,6 +1445,9 @@
     if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
     state.image = null;
     state.imageUrl = "";
+    state.exampleActive = false;
+    state.exampleStatic = false;
+    setExampleViewMode(false);
     resetPolygon();
     if (workspaceEl) workspaceEl.hidden = true;
     if (fileInput) fileInput.value = "";
@@ -1377,8 +1498,6 @@
   });
 
   computeFinalEdgeBtn?.addEventListener("click", computeFinalEdge);
-
-  loadExampleBtn?.addEventListener("click", loadExampleData);
 
   sendAreaBtn?.addEventListener("click", sendToArea);
   sendVolumeBtn?.addEventListener("click", sendToVolume);

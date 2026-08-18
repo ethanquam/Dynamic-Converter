@@ -46,15 +46,18 @@
     };
   }
 
-  /** Photo area: front walkway traced from PXL_20260817_212655222.jpg with field tape measurements. */
+  /**
+   * Photo area walkway example.
+   * Live trace vertices match the bundled 1024×576 photo. Field measurements leave E2 blank
+   * for compute-final-edge (sanity check ~13′-3″). Reference snapshot values match the
+   * annotated how-it-works image; volume check: 62.9785 ft² × 3″ = 15.7446 ft³.
+   */
   function getPhotoAreaExample() {
     return {
       label: "Front walkway (field measurements)",
-      imageUrl: "examples/photo-area/walkway-example.jpg?v=4",
-      imageFileName: "PXL_20260817_212655222.jpg",
+      imageUrl: "examples/photo-area/walkway-example.jpg?v=5",
+      imageFileName: "walkway-example.jpg",
       unitSystem: "imperial-ftin",
-      // Normalized corners on the bundled 1024×576 photo (not the full-res phone upload).
-      // E3 is short (3') and E4 is long (10' 4-1/2") along the back of the walkway.
       vertices: [
         { x: 0.919, y: 0.845 },
         { x: 0.173, y: 0.917 },
@@ -73,6 +76,19 @@
       ],
       depth: "3\"",
       runComputeFinalEdge: true,
+      referenceSnapshot: {
+        edges: [
+          { from: 1, to: 2, pixelLength: 549.1, lengthText: "5' 7-1/2\"" },
+          { from: 2, to: 3, pixelLength: 377.7, lengthText: "13'-3 1/16\"", isCheck: true },
+          { from: 3, to: 4, pixelLength: 108.3, lengthText: "3'" },
+          { from: 4, to: 5, pixelLength: 193.0, lengthText: "10' 4-1/2\"" },
+          { from: 5, to: 6, pixelLength: 180.7, lengthText: "2' 7-1/2\"" },
+          { from: 6, to: 1, pixelLength: 171.5, lengthText: "3' 0-1/2\"" },
+        ],
+        areaSquareFeet: 62.9785,
+        depth: "3\"",
+        volumeCubicFeet: 15.7446,
+      },
     };
   }
 

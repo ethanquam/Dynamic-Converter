@@ -2,10 +2,12 @@
   "use strict";
 
   const METERS_PER_FOOT = 0.3048;
+  const METERS_PER_INCH = METERS_PER_FOOT / 12;
   const M2_PER_SQ_FT = METERS_PER_FOOT ** 2;
   const M3_PER_CU_FT = METERS_PER_FOOT ** 3;
   const HANDLE_RADIUS = 12;
   const CLOSE_SNAP_PX = 16;
+  const CLOSURE_OVERLAY_MAX_METERS = 0.25;
 
   const canvas = document.getElementById("photo-area-canvas");
   const fileInput = document.getElementById("photo-area-file-input");
@@ -22,6 +24,9 @@
   const depthInput = document.getElementById("photo-area-depth");
   const sendAreaBtn = document.getElementById("photo-area-send-area");
   const sendVolumeBtn = document.getElementById("photo-area-send-volume");
+  const computeFinalEdgeBtn = document.getElementById("photo-area-compute-final-edge");
+  const loadExampleBtn = document.getElementById("photo-area-load-example");
+  const traceHintEl = document.getElementById("photo-area-trace-hint");
   const unitTabs = document.querySelectorAll("[data-photo-area-units]");
 
   const state = {
@@ -35,6 +40,12 @@
     highlightedEdgeIndex: null,
     areaSquareMeters: null,
     volumeCubicMeters: null,
+    autoEdgeIndex: null,
+    autoEdgeMeters: null,
+    closureGapMeters: null,
+    averageMetersPerPixel: null,
+    areaManualOverride: false,
+    computeFinalEdge: false,
   };
 
   function setStatus(message, isError = false) {
@@ -42,6 +53,105 @@
     statusLine.textContent = message;
     statusLine.hidden = !message;
     statusLine.classList.toggle("is-error", isError);
+  }
+
+  function parseFraction(text) {
+    const match = text.match(/^(-?\d+)\s*\/\s*(\d+)$/);
+    if (!match) return null;
+    const num = Number(match[1]);
+    const den = Number(match[2]);
+    if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) return null;
+    return num / den;
+  }
+
+  function parseFeetInchesFraction(text) {
+    const trimmed = text.trim();
+    if (!trimmed) return { empty: true };
+
+    let working = trimmed
+      .replace(/[″""]/g, '"')
+      .replace(/[′'′]/g, "'")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (/^-?\d+(\.\d+)?$/.test(working)) {
+      const feet = Number(working);
+      if (feet < 0) return { error: "Length cannot be negative." };
+      return { meters: feet * METERS_PER_FOOT };
+    }
+
+    let feet = 0;
+    let inches = 0;
+    let inchesOnly = false;
+
+    const hyphenMatch = working.match(/^(-?\d+)\s*-\s*(.+)$/);
+    if (hyphenMatch && !working.includes("'") && !/\bft\b/i.test(working)) {
+      feet = Number(hyphenMatch[1]);
+      working = hyphenMatch[2];
+    }
+
+    const feetQuoteMatch = working.match(/^(-?\d+(?:\.\d+)?)\s*'/);
+    if (feetQuoteMatch) {
+      feet = Number(feetQuoteMatch[1]);
+      working = working.slice(feetQuoteMatch[0].length).trim();
+    } else {
+      const feetWordMatch = working.match(/^(-?\d+(?:\.\d+)?)\s*ft\b/i);
+      if (feetWordMatch) {
+        feet = Number(feetWordMatch[1]);
+        working = working.slice(feetWordMatch[0].length).trim();
+      }
+    }
+
+    if (/^(-?\d|.*")/.test(working) && feet === 0 && !working.includes("'")) {
+      inchesOnly = /^\d/.test(working) && (working.includes('"') || /\bin\b/i.test(working));
+    }
+
+    working = working.replace(/\s*in(?:ches)?\.?\s*$/i, "").replace(/"\s*$/, "").trim();
+
+    if (!working && feet !== 0) {
+      if (feet < 0) return { error: "Length cannot be negative." };
+      return { meters: feet * METERS_PER_FOOT };
+    }
+
+    if (working) {
+      const inchHyphenFrac = working.match(/^(\d+(?:\.\d+)?)\s*-\s*(\d+\/\d+)$/);
+      if (inchHyphenFrac) {
+        inches = Number(inchHyphenFrac[1]);
+        const frac = parseFraction(inchHyphenFrac[2]);
+        if (frac === null) return { error: "Invalid fraction." };
+        inches += frac;
+      } else {
+      const inchParts = working.match(/^(-?\d+(?:\.\d+)?)(?:\s+(\d+\/\d+))?$/);
+      if (inchParts) {
+        inches = Number(inchParts[1]);
+        if (inchParts[2]) {
+          const frac = parseFraction(inchParts[2]);
+          if (frac === null) return { error: "Invalid fraction." };
+          inches += frac;
+        }
+      } else {
+        const fracOnly = working.match(/^(\d+\/\d+)$/);
+        if (fracOnly) {
+          const frac = parseFraction(fracOnly[1]);
+          if (frac === null) return { error: "Invalid fraction." };
+          inches = frac;
+        } else {
+          return {
+            error: 'Use formats like 12\'-6 1/2", 5\' 7-1/2", or 6 1/2".',
+          };
+        }
+      }
+      }
+    }
+
+    if (inchesOnly && feet === 0) {
+      if (inches < 0) return { error: "Length cannot be negative." };
+      return { meters: inches * METERS_PER_INCH };
+    }
+
+    const totalFeet = feet + inches / 12;
+    if (totalFeet < 0) return { error: "Length cannot be negative." };
+    return { meters: totalFeet * METERS_PER_FOOT };
   }
 
   function parseNumber(text) {
@@ -55,6 +165,9 @@
   }
 
   function parseLength(text) {
+    if (state.unitSystem === "imperial-ftin") {
+      return parseFeetInchesFraction(text);
+    }
     const parsed = parseNumber(text);
     if (parsed.empty || parsed.error) return parsed;
     const meters = state.unitSystem === "metric" ? parsed.value : parsed.value * METERS_PER_FOOT;
@@ -69,6 +182,306 @@
     return { squareMeters };
   }
 
+  function formatFeetInchesFraction(meters, precisionDenominator = 16) {
+    if (!Number.isFinite(meters)) return "";
+
+    const sign = meters < 0 ? -1 : 1;
+    let totalInches = (Math.abs(meters) / METERS_PER_INCH) * precisionDenominator;
+    totalInches = Math.round(totalInches);
+
+    let feet = Math.floor(totalInches / (12 * precisionDenominator));
+    let inchUnits = totalInches - feet * 12 * precisionDenominator;
+
+    if (inchUnits === 12 * precisionDenominator) {
+      feet += 1;
+      inchUnits = 0;
+    }
+
+    const wholeInches = Math.floor(inchUnits / precisionDenominator);
+    const fracUnits = inchUnits % precisionDenominator;
+
+    let result = (sign < 0 ? "-" : "") + feet + "'";
+
+    if (wholeInches > 0 || fracUnits > 0) {
+      result += "-";
+      if (wholeInches > 0) result += wholeInches;
+      if (fracUnits > 0) {
+        const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+        const g = gcd(fracUnits, precisionDenominator);
+        const num = fracUnits / g;
+        const den = precisionDenominator / g;
+        if (wholeInches > 0) result += " ";
+        result += num + "/" + den;
+      }
+      result += '"';
+    }
+
+    return result;
+  }
+
+  function formatLength(meters) {
+    if (!Number.isFinite(meters)) return "";
+    if (state.unitSystem === "imperial-ftin") {
+      return formatFeetInchesFraction(meters);
+    }
+    const value = state.unitSystem === "metric" ? meters : meters / METERS_PER_FOOT;
+    return String(Number(value.toFixed(4)));
+  }
+
+  function formatAreaValue(squareMeters) {
+    if (!Number.isFinite(squareMeters)) return "";
+    if (state.unitSystem === "metric") {
+      return String(Number(squareMeters.toFixed(4)));
+    }
+    return String(Number((squareMeters / M2_PER_SQ_FT).toFixed(4)));
+  }
+
+  function shoelaceArea(vertices) {
+    if (vertices.length < 3) return 0;
+    let sum = 0;
+    for (let i = 0; i < vertices.length; i += 1) {
+      const j = (i + 1) % vertices.length;
+      sum += vertices[i].x * vertices[j].y - vertices[j].x * vertices[i].y;
+    }
+    return Math.abs(sum) * 0.5;
+  }
+
+  function edgeDirection(edgeIndex) {
+    const verts = state.vertices;
+    const j = (edgeIndex + 1) % verts.length;
+    const dx = verts[j].x - verts[edgeIndex].x;
+    const dy = verts[j].y - verts[edgeIndex].y;
+    const len = Math.hypot(dx, dy) || 1;
+    return { ux: dx / len, uy: dy / len };
+  }
+
+  function resolveEdgeLengths() {
+    const n = state.edges.length;
+    const lengths = new Array(n).fill(null);
+    const emptyIndices = [];
+
+    for (let i = 0; i < n; i += 1) {
+      const text = state.edges[i].lengthText.trim();
+      if (!text) {
+        emptyIndices.push(i);
+        continue;
+      }
+      const parsed = parseLength(text);
+      if (parsed.error) return { error: parsed.error, edgeIndex: i };
+      if (!parsed.empty) lengths[i] = parsed.meters;
+    }
+
+    if (emptyIndices.length === 1 && state.computeFinalEdge) {
+      let sx = 0;
+      let sy = 0;
+      for (let i = 0; i < n; i += 1) {
+        if (i === emptyIndices[0]) continue;
+        if (lengths[i] == null) return { lengths, emptyIndices };
+        const { ux, uy } = edgeDirection(i);
+        sx += lengths[i] * ux;
+        sy += lengths[i] * uy;
+      }
+      const autoIndex = emptyIndices[0];
+      const autoMeters = Math.hypot(sx, sy);
+      lengths[autoIndex] = autoMeters;
+      return {
+        lengths,
+        emptyIndices,
+        autoIndex,
+        autoMeters,
+        closureGapMeters: 0,
+      };
+    }
+
+    if (emptyIndices.length === 0) {
+      let sx = 0;
+      let sy = 0;
+      for (let i = 0; i < n; i += 1) {
+        if (lengths[i] == null) return { lengths, emptyIndices };
+        const { ux, uy } = edgeDirection(i);
+        sx += lengths[i] * ux;
+        sy += lengths[i] * uy;
+      }
+      return {
+        lengths,
+        emptyIndices,
+        closureGapMeters: Math.hypot(sx, sy),
+      };
+    }
+
+    return { lengths, emptyIndices };
+  }
+
+  function measuredScaleSamples(lengths, excludeAuto = true) {
+    const samples = [];
+    for (let i = 0; i < state.edges.length; i += 1) {
+      if (excludeAuto && state.autoEdgeIndex === i) continue;
+      const len = lengths[i];
+      if (len == null || len <= 0) continue;
+      if (state.edges[i].pixelLength <= 0) continue;
+      samples.push(len / state.edges[i].pixelLength);
+    }
+    return samples;
+  }
+
+  function averageMetersPerPixel(lengths, excludeAuto = true) {
+    const samples = measuredScaleSamples(lengths, excludeAuto);
+    if (samples.length === 0) return null;
+    return samples.reduce((sum, value) => sum + value, 0) / samples.length;
+  }
+
+  function areaFromTrace(lengths, excludeAutoFromScale = true) {
+    const mpp = averageMetersPerPixel(lengths, excludeAutoFromScale);
+    if (!mpp) return null;
+    return shoelaceArea(state.vertices) * mpp * mpp;
+  }
+
+  function countEmptyEdges() {
+    return state.edges.filter((edge) => !edge.lengthText.trim()).length;
+  }
+
+  function canComputeFinalEdge() {
+    if (!state.closed || state.edges.length < 3) return false;
+    if (countEmptyEdges() !== 1) return false;
+    syncEdgesFromDom();
+    for (let i = 0; i < state.edges.length; i += 1) {
+      const text = state.edges[i].lengthText.trim();
+      if (!text) continue;
+      const parsed = parseLength(text);
+      if (parsed.error || parsed.empty) return false;
+    }
+    return true;
+  }
+
+  function updateComputeFinalEdgeButton() {
+    if (!computeFinalEdgeBtn) return;
+    const canCompute = canComputeFinalEdge();
+    computeFinalEdgeBtn.disabled = !canCompute;
+    computeFinalEdgeBtn.hidden = !state.closed || state.edges.length === 0;
+    if (state.computeFinalEdge && state.autoEdgeIndex != null) {
+      computeFinalEdgeBtn.textContent = "Recompute final edge";
+    } else {
+      computeFinalEdgeBtn.textContent = "Compute final edge";
+    }
+  }
+
+  function computeFinalEdge() {
+    if (!canComputeFinalEdge()) {
+      setStatus("Enter all but one edge length, then compute the remaining edge.", true);
+      return;
+    }
+    state.computeFinalEdge = true;
+    refreshMeasurements();
+    updateComputeFinalEdgeButton();
+  }
+
+  function invalidateComputedEdge() {
+    if (!state.computeFinalEdge && state.autoEdgeIndex == null) return;
+    state.computeFinalEdge = false;
+    applyFitCore();
+    updateEdgeRowsInPlace();
+    draw();
+    computeResults();
+    updateOverallStatus();
+    updateComputeFinalEdgeButton();
+  }
+
+  function refreshMeasurements() {
+    applyFitCore();
+    updateEdgeRowsInPlace();
+    draw();
+    computeResults();
+    updateOverallStatus();
+    updateComputeFinalEdgeButton();
+  }
+
+  function updateEdgeRowsInPlace() {
+    if (!edgesBodyEl) return;
+    state.edges.forEach((edge, index) => {
+      const row = edgesBodyEl.rows[index];
+      if (!row) return;
+      const isAuto =
+        state.autoEdgeIndex === index &&
+        state.autoEdgeMeters != null &&
+        !edge.lengthText.trim();
+      const cell = row.querySelector(".photo-area-edge-length-cell");
+      const input = row.querySelector("[data-edge-length]");
+      if (!cell || !input) return;
+
+      if (isAuto) {
+        if (document.activeElement !== input) {
+          input.value = formatLength(state.autoEdgeMeters);
+        }
+        input.readOnly = true;
+        input.classList.add("photo-area-edge-length--auto");
+        row.classList.add("is-auto-edge");
+        if (!cell.querySelector(".photo-area-auto-badge")) {
+          const badge = document.createElement("span");
+          badge.className = "photo-area-auto-badge";
+          badge.textContent = "Check";
+          badge.title = "Computed sanity-check edge — verify against your field tape";
+          cell.appendChild(badge);
+        }
+      } else {
+        input.readOnly = false;
+        input.classList.remove("photo-area-edge-length--auto");
+        row.classList.remove("is-auto-edge");
+        cell.querySelector(".photo-area-auto-badge")?.remove();
+      }
+    });
+  }
+
+  function applyFitCore() {
+    state.autoEdgeIndex = null;
+    state.autoEdgeMeters = null;
+    state.closureGapMeters = null;
+    state.averageMetersPerPixel = null;
+
+    if (!state.closed || state.edges.length < 3) return null;
+
+    syncEdgesFromDom();
+    const resolved = resolveEdgeLengths();
+    if (resolved.error) {
+      setStatus(resolved.error, true);
+      return resolved;
+    }
+
+    const { lengths, emptyIndices, autoIndex, autoMeters, closureGapMeters } = resolved;
+    const knownCount = state.edges.length - emptyIndices.length;
+
+    if (autoIndex != null) {
+      state.autoEdgeIndex = autoIndex;
+      state.autoEdgeMeters = autoMeters;
+    }
+    if (closureGapMeters != null) {
+      state.closureGapMeters = closureGapMeters;
+    }
+
+    const canFitShape =
+      (state.computeFinalEdge && autoIndex != null) ||
+      (emptyIndices.length === 0 && knownCount === state.edges.length);
+
+    const excludeAutoFromScale = autoIndex != null;
+    state.averageMetersPerPixel = averageMetersPerPixel(lengths, excludeAutoFromScale);
+
+    if (canFitShape) {
+      const areaMeters = areaFromTrace(lengths, excludeAutoFromScale);
+      if (areaMeters != null) {
+        if (!state.areaManualOverride && areaInput) {
+          areaInput.value = formatAreaValue(areaMeters);
+        }
+        if (!state.areaManualOverride) {
+          state.areaSquareMeters = areaMeters;
+        }
+      }
+    } else if (!state.areaManualOverride) {
+      if (areaInput) areaInput.value = "";
+      state.areaSquareMeters = null;
+    }
+
+    return resolved;
+  }
+
   function formatVolume(cubicMeters) {
     if (!Number.isFinite(cubicMeters)) return "—";
     if (state.unitSystem === "metric") {
@@ -78,11 +491,14 @@
   }
 
   function unitHint() {
-    return state.unitSystem === "metric" ? "Decimal meters" : "Decimal feet";
+    if (state.unitSystem === "metric") return "Decimal meters";
+    if (state.unitSystem === "imperial-ftin") return "e.g. 12'-6 1/2\"";
+    return "Decimal feet";
   }
 
   function areaHint() {
-    return state.unitSystem === "metric" ? "Decimal m²" : "Decimal ft²";
+    if (state.unitSystem === "metric") return "Decimal m²";
+    return "Decimal ft²";
   }
 
   function canvasPoint(event) {
@@ -110,8 +526,7 @@
     return { from, to };
   }
 
-  function edgeGeometry(edgeIndex) {
-    const verts = state.vertices;
+  function edgeGeometry(edgeIndex, verts = state.vertices) {
     const n = verts.length;
     const j = (edgeIndex + 1) % n;
     const a = verts[edgeIndex];
@@ -228,6 +643,7 @@
   function renderEdgesTable() {
     if (!edgesBodyEl) return;
     syncEdgesFromDom();
+    applyFitCore();
     edgesBodyEl.innerHTML = "";
 
     if (!state.closed || state.edges.length === 0) {
@@ -239,28 +655,43 @@
 
     state.edges.forEach((edge, index) => {
       const { from, to } = edgeEndpointLabels(index);
+      const isAuto =
+        state.autoEdgeIndex === index &&
+        state.autoEdgeMeters != null &&
+        !edge.lengthText.trim();
+      const displayValue = isAuto
+        ? formatLength(state.autoEdgeMeters)
+        : edge.lengthText.replace(/"/g, "&quot;");
       const row = document.createElement("tr");
       row.dataset.edgeIndex = String(index);
+      if (isAuto) row.classList.add("is-auto-edge");
       row.innerHTML = `
         <td class="photo-area-edge-id">
           <span class="photo-area-edge-badge">E${index + 1}</span>
           <span class="photo-area-edge-endpoints">${from}→${to}</span>
         </td>
         <td class="photo-area-edges-pixel">${edge.pixelLength.toFixed(1)} px</td>
-        <td>
-          <input type="text" class="photo-area-edge-length" data-edge-length
+        <td class="photo-area-edge-length-cell">
+          <input type="text" class="photo-area-edge-length${isAuto ? " photo-area-edge-length--auto" : ""}" data-edge-length
                  inputmode="decimal" autocomplete="off" spellcheck="false"
-                 placeholder="${unitHint()}" value="${edge.lengthText.replace(/"/g, "&quot;")}"
-                 aria-label="Measured length for edge ${index + 1}">
+                 placeholder="${unitHint()}" value="${displayValue}"
+                 ${isAuto ? "readonly" : ""}
+                 aria-label="Measured length for edge ${index + 1}${isAuto ? " (computed sanity-check edge)" : ""}">
+          ${isAuto ? '<span class="photo-area-auto-badge" title="Computed sanity-check edge — verify against your field tape">Check</span>' : ""}
         </td>
       `;
 
       const lengthInput = row.querySelector("[data-edge-length]");
 
       lengthInput?.addEventListener("input", () => {
+        if (lengthInput.readOnly) return;
         edge.lengthText = lengthInput.value;
-        updateOverallStatus();
-        draw();
+        state.computeFinalEdge = false;
+        refreshMeasurements();
+      });
+
+      lengthInput?.addEventListener("focus", () => {
+        if (lengthInput.readOnly) lengthInput.blur();
       });
 
       row.addEventListener("mouseenter", () => setHighlightedEdge(index));
@@ -274,7 +705,11 @@
       edgesBodyEl.appendChild(row);
     });
 
+    updateEdgeRowsInPlace();
+    draw();
+    computeResults();
     updateOverallStatus();
+    updateComputeFinalEdgeButton();
   }
 
   function updateOverallStatus() {
@@ -284,39 +719,72 @@
     const total = state.edges.length;
     const hasArea = state.areaSquareMeters != null && state.areaSquareMeters > 0;
 
+    if (state.closureGapMeters != null && state.closureGapMeters > CLOSURE_OVERLAY_MAX_METERS) {
+      setStatus(
+        `Measurements differ by about ${formatLength(state.closureGapMeters)} when walked around the shape — normal for field tape. Trace stays on the photo; leave one edge blank and use Compute final edge.`,
+        true
+      );
+      return;
+    }
+
+    if (state.autoEdgeIndex != null && state.autoEdgeMeters != null) {
+      const autoLabel = formatLength(state.autoEdgeMeters);
+      if (hasArea) {
+        setStatus(
+          `E${state.autoEdgeIndex + 1} computed as ${autoLabel} (orange on photo) — compare against your field tape. Area uses your traced outline.`
+        );
+        return;
+      }
+      setStatus(
+        `E${state.autoEdgeIndex + 1} computed as ${autoLabel} (orange on photo) — sanity-check against your field tape.`
+      );
+      return;
+    }
+
     if (hasArea && state.volumeCubicMeters != null && state.volumeCubicMeters > 0) {
-      setStatus("Area and volume ready — send to the converters when you are done.");
+      setStatus(
+        "Area and volume ready — depth preview is overlaid on your trace (fixed view, no pan). Send to the converters when you are done."
+      );
       return;
     }
     if (hasArea) {
-      setStatus("Surface area entered. Add depth for volume, or send area to the Area Converter.");
+      setStatus("Surface area calculated from edge measurements. Add depth for volume.");
       return;
     }
     if (filled === 0) {
-      setStatus("Enter field measurements for each edge, then add surface area below.");
+      setStatus("Enter all but one edge length, then click Compute final edge for the sanity check.");
       return;
     }
-    if (filled < total) {
-      setStatus(`${filled} of ${total} edges measured — enter the remaining lengths from your tape measure.`);
+    if (filled < total - 1) {
+      setStatus(`${filled} of ${total} edges entered — fill all but one, then click Compute final edge.`);
       return;
     }
-    setStatus("All edge lengths entered. Add surface area from your field measurement.");
+    if (filled === total - 1 && !state.computeFinalEdge) {
+      setStatus("All measured edges entered — click Compute final edge to calculate the remaining edge and area.");
+      return;
+    }
+    if (filled === total) {
+      setStatus("All edges entered manually — leave one blank and use Compute final edge for a sanity check.");
+      return;
+    }
+    setStatus(`${filled} of ${total} edges entered — fill all but one, then click Compute final edge.`);
   }
 
   function computeResults() {
-    state.areaSquareMeters = null;
+    if (state.areaManualOverride) {
+      state.areaSquareMeters = null;
+      const areaParsed = parseArea(areaInput?.value ?? "");
+      if (areaParsed.error) {
+        setStatus(areaParsed.error, true);
+        updateResultDisplay();
+        return;
+      }
+      if (!areaParsed.empty && areaParsed.squareMeters > 0) {
+        state.areaSquareMeters = areaParsed.squareMeters;
+      }
+    }
+
     state.volumeCubicMeters = null;
-
-    const areaParsed = parseArea(areaInput?.value ?? "");
-    if (areaParsed.error) {
-      setStatus(areaParsed.error, true);
-      updateResultDisplay();
-      return;
-    }
-
-    if (!areaParsed.empty && areaParsed.squareMeters > 0) {
-      state.areaSquareMeters = areaParsed.squareMeters;
-    }
 
     const depthParsed = parseLength(depthInput?.value ?? "");
     if (depthParsed.error) {
@@ -349,8 +817,80 @@
     }
   }
 
-  function drawEdgeSegment(ctx, edgeIndex, style) {
-    const verts = state.vertices;
+  function extrusionDepthMeters() {
+    const depthParsed = parseLength(depthInput?.value ?? "");
+    if (depthParsed.error || depthParsed.empty || depthParsed.meters <= 0) return null;
+    return depthParsed.meters;
+  }
+
+  function extrusionMetersPerPixel() {
+    if (state.averageMetersPerPixel && state.averageMetersPerPixel > 0) {
+      return state.averageMetersPerPixel;
+    }
+    if (!state.closed || state.edges.length < 3) return null;
+    syncEdgesFromDom();
+    const resolved = resolveEdgeLengths();
+    if (resolved.error || !resolved.lengths) return null;
+    return averageMetersPerPixel(resolved.lengths, state.autoEdgeIndex != null);
+  }
+
+  /** Fixed oblique extrusion locked to the traced outline (visual preview, not perspective-correct 3D). */
+  function drawDepthExtrusion(ctx, verts, depthMeters, metersPerPixel) {
+    if (!depthMeters || depthMeters <= 0 || verts.length < 3) return;
+
+    let depthPx =
+      metersPerPixel && metersPerPixel > 0
+        ? depthMeters / metersPerPixel
+        : canvas.width * 0.025;
+    const minPx = canvas.width * 0.012;
+    const maxPx = canvas.width * 0.08;
+    depthPx = Math.min(Math.max(depthPx, minPx), maxPx);
+
+    const obliqueLen = Math.hypot(0.65, 0.75);
+    const dx = (-0.65 / obliqueLen) * depthPx;
+    const dy = (-0.75 / obliqueLen) * depthPx;
+
+    const top = verts.map((v) => ({ x: v.x + dx, y: v.y + dy }));
+    const n = verts.length;
+    const wallStroke = Math.max(1, canvas.width / 550);
+
+    const faceOrder = [];
+    for (let i = 0; i < n; i += 1) {
+      const j = (i + 1) % n;
+      const cx = (verts[i].x + verts[j].x + top[i].x + top[j].x) * 0.25;
+      const cy = (verts[i].y + verts[j].y + top[i].y + top[j].y) * 0.25;
+      faceOrder.push({ i, j, sort: cx + cy });
+    }
+    faceOrder.sort((a, b) => b.sort - a.sort);
+
+    for (const { i, j } of faceOrder) {
+      ctx.beginPath();
+      ctx.moveTo(verts[i].x, verts[i].y);
+      ctx.lineTo(verts[j].x, verts[j].y);
+      ctx.lineTo(top[j].x, top[j].y);
+      ctx.lineTo(top[i].x, top[i].y);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(52, 78, 45, 0.55)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(38, 58, 34, 0.7)";
+      ctx.lineWidth = wallStroke;
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(top[0].x, top[0].y);
+    for (let i = 1; i < n; i += 1) {
+      ctx.lineTo(top[i].x, top[i].y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = "rgba(107, 143, 88, 0.42)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(47, 74, 36, 0.85)";
+    ctx.lineWidth = Math.max(1.5, canvas.width / 450);
+    ctx.stroke();
+  }
+
+  function drawEdgeSegment(ctx, edgeIndex, style, verts = state.vertices) {
     const j = (edgeIndex + 1) % verts.length;
     ctx.beginPath();
     ctx.moveTo(verts[edgeIndex].x, verts[edgeIndex].y);
@@ -370,12 +910,15 @@
     const fontSize = Math.max(11, canvas.width / 75);
 
     state.edges.forEach((edge, index) => {
-      const { labelPoint, angle } = edgeGeometry(index);
+      const { labelPoint, angle } = edgeGeometry(index, state.vertices);
       const isHighlighted =
         state.highlightedEdgeIndex == null || state.highlightedEdgeIndex === index;
-      const hasMeasurement = Boolean(edge.lengthText.trim());
-      const label = `E${index + 1}`;
-      const pxLabel = `${Math.round(edge.pixelLength)} px`;
+      const isAuto = state.autoEdgeIndex === index && state.autoEdgeMeters != null;
+      const hasMeasurement = Boolean(edge.lengthText.trim()) || isAuto;
+      const label = isAuto ? `E${index + 1} · Check` : `E${index + 1}`;
+      const subLabel = isAuto
+        ? formatLength(state.autoEdgeMeters)
+        : `${Math.round(edge.pixelLength)} px`;
 
       ctx.save();
       ctx.translate(labelPoint.x, labelPoint.y);
@@ -387,18 +930,24 @@
 
       const titleW = ctx.measureText(label).width;
       ctx.font = `${Math.max(9, fontSize * 0.78)}px Segoe UI, system-ui, sans-serif`;
-      const subW = ctx.measureText(pxLabel).width;
+      const subW = ctx.measureText(subLabel).width;
       const boxW = Math.max(titleW, subW) + fontSize * 0.9;
-      const boxH = fontSize * 1.85;
+      const boxH = fontSize * (isAuto ? 2.05 : 1.85);
       const x = -boxW * 0.5;
       const y = -boxH * 0.5;
 
-      ctx.fillStyle = isHighlighted ? "rgba(255, 255, 255, 0.96)" : "rgba(255, 255, 255, 0.82)";
-      ctx.strokeStyle = hasMeasurement
-        ? "#2f4a24"
+      ctx.fillStyle = isAuto
+        ? "rgba(255, 248, 240, 0.98)"
         : isHighlighted
+          ? "rgba(255, 255, 255, 0.96)"
+          : "rgba(255, 255, 255, 0.82)";
+      ctx.strokeStyle = isAuto
+        ? "#c45a11"
+        : hasMeasurement
           ? "#2f4a24"
-          : "rgba(82, 122, 66, 0.65)";
+          : isHighlighted
+            ? "#2f4a24"
+            : "rgba(82, 122, 66, 0.65)";
       ctx.lineWidth = Math.max(1.5, canvas.width / 600);
       if (typeof ctx.roundRect === "function") {
         ctx.beginPath();
@@ -410,12 +959,12 @@
         ctx.strokeRect(x, y, boxW, boxH);
       }
 
-      ctx.fillStyle = "#2f4a24";
+      ctx.fillStyle = isAuto ? "#c45a11" : "#2f4a24";
       ctx.font = `bold ${fontSize}px Segoe UI, system-ui, sans-serif`;
       ctx.fillText(label, 0, -fontSize * 0.22);
       ctx.font = `${Math.max(9, fontSize * 0.78)}px Segoe UI, system-ui, sans-serif`;
-      ctx.fillStyle = "#527a42";
-      ctx.fillText(pxLabel, 0, fontSize * 0.48);
+      ctx.fillStyle = isAuto ? "#a04a0e" : "#527a42";
+      ctx.fillText(subLabel, 0, fontSize * 0.48);
       ctx.restore();
     });
   }
@@ -432,6 +981,11 @@
     if (verts.length === 0) return;
 
     const baseLineWidth = Math.max(2, canvas.width / 400);
+    const depthMeters = extrusionDepthMeters();
+    if (state.closed && verts.length >= 3 && depthMeters != null) {
+      drawDepthExtrusion(ctx, verts, depthMeters, extrusionMetersPerPixel());
+    }
+
     ctx.fillStyle = "rgba(107, 143, 88, 0.22)";
 
     if (state.closed && verts.length >= 3) {
@@ -446,16 +1000,21 @@
       for (let i = 0; i < verts.length; i += 1) {
         const highlighted = state.highlightedEdgeIndex === i;
         const dimmed = state.highlightedEdgeIndex != null && !highlighted;
-        const measured = Boolean(state.edges[i]?.lengthText.trim());
+        const isAuto = state.autoEdgeIndex === i && state.autoEdgeMeters != null;
+        const measured =
+          Boolean(state.edges[i]?.lengthText.trim()) || isAuto;
         drawEdgeSegment(ctx, i, {
-          stroke: highlighted
-            ? "#2f4a24"
-            : measured
-              ? "#3d6230"
-              : dimmed
-                ? "rgba(82, 122, 66, 0.35)"
-                : "#527a42",
-          lineWidth: highlighted ? baseLineWidth * 1.8 : baseLineWidth,
+          stroke: isAuto
+            ? "#c45a11"
+            : highlighted
+              ? "#2f4a24"
+              : measured
+                ? "#3d6230"
+                : dimmed
+                  ? "rgba(82, 122, 66, 0.35)"
+                  : "#527a42",
+          lineWidth: isAuto ? baseLineWidth * 2.2 : highlighted ? baseLineWidth * 1.8 : baseLineWidth,
+          dash: isAuto ? [12, 7] : undefined,
         });
       }
 
@@ -481,7 +1040,8 @@
       ctx.setLineDash([]);
     }
 
-    verts.forEach((point, index) => {
+    const handleVerts = verts;
+    handleVerts.forEach((point, index) => {
       const radius = Math.max(HANDLE_RADIUS, canvas.width / 80);
       ctx.beginPath();
       ctx.fillStyle = index === 0 && verts.length >= 3 && !state.closed ? "#ffffff" : "#527a42";
@@ -518,6 +1078,7 @@
     renderEdgesTable();
     draw();
     updateToolbar();
+    updateComputeFinalEdgeButton();
     setStatus("Enter field measurements for each edge in the table below.");
   }
 
@@ -525,6 +1086,7 @@
     if (undoBtn) undoBtn.disabled = state.vertices.length === 0 || state.closed;
     if (closeBtn) closeBtn.disabled = state.closed || state.vertices.length < 3;
     if (clearBtn) clearBtn.disabled = !state.image;
+    if (traceHintEl) traceHintEl.hidden = state.closed;
   }
 
   function resetPolygon() {
@@ -534,14 +1096,20 @@
     state.areaSquareMeters = null;
     state.volumeCubicMeters = null;
     state.highlightedEdgeIndex = null;
+    state.autoEdgeIndex = null;
+    state.autoEdgeMeters = null;
+    state.closureGapMeters = null;
+    state.areaManualOverride = false;
+    state.computeFinalEdge = false;
     if (edgesPanelEl) edgesPanelEl.hidden = true;
     if (edgesBodyEl) edgesBodyEl.innerHTML = "";
     updateResultDisplay();
+    updateComputeFinalEdgeButton();
     updateToolbar();
     draw();
   }
 
-  function loadImage(file) {
+  function loadImage(file, onReady) {
     if (!file) return;
     if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
 
@@ -553,16 +1121,99 @@
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
       }
-      resetPolygon();
+      if (onReady) {
+        onReady();
+      } else {
+        resetPolygon();
+        if (fileNameEl) fileNameEl.textContent = file.name;
+        setStatus("Tap or click the photo to place corner points along the outline.");
+      }
       if (workspaceEl) workspaceEl.hidden = false;
-      if (fileNameEl) fileNameEl.textContent = file.name;
       draw();
-      setStatus("Tap or click the photo to place corner points along the outline.");
     };
     img.onerror = () => {
       setStatus("Could not load that image.", true);
     };
     img.src = state.imageUrl;
+  }
+
+  function applyExampleState(example) {
+    setUnitSystem(example.unitSystem || "imperial");
+    const width = canvas?.width ?? state.image?.naturalWidth ?? 1;
+    const height = canvas?.height ?? state.image?.naturalHeight ?? 1;
+
+    state.vertices = (example.vertices || []).map((vertex) => ({
+      x: vertex.x <= 1 ? vertex.x * width : vertex.x,
+      y: vertex.y <= 1 ? vertex.y * height : vertex.y,
+    }));
+    state.closed = state.vertices.length >= 3;
+    state.highlightedEdgeIndex = null;
+    state.areaManualOverride = false;
+    state.computeFinalEdge = false;
+    state.autoEdgeIndex = null;
+    state.autoEdgeMeters = null;
+    state.closureGapMeters = null;
+    state.areaSquareMeters = null;
+    state.volumeCubicMeters = null;
+
+    rebuildEdges();
+    (example.edgeLengths || []).forEach((lengthText, index) => {
+      if (state.edges[index]) {
+        state.edges[index].lengthText = lengthText ?? "";
+      }
+    });
+
+    if (areaInput) areaInput.value = "";
+    if (depthInput) depthInput.value = example.depth ?? "";
+
+    renderEdgesTable();
+    updateToolbar();
+
+    if (example.runComputeFinalEdge) {
+      computeFinalEdge();
+    } else {
+      refreshMeasurements();
+    }
+  }
+
+  async function loadExampleData() {
+    if (!window.ExampleData?.getPhotoAreaExample) {
+      setStatus("Example data module failed to load.", true);
+      return;
+    }
+
+    reset();
+    const example = window.ExampleData.getPhotoAreaExample();
+    setStatus("Loading example photo…");
+
+    try {
+      const imageUrl = example.imageUrl.includes("?")
+        ? `${example.imageUrl}&t=${Date.now()}`
+        : `${example.imageUrl}?t=${Date.now()}`;
+      const response = await fetch(imageUrl, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Could not load the example photo.");
+      }
+      const blob = await response.blob();
+      const file = new File(
+        [blob],
+        example.imageFileName || "walkway-example.jpg",
+        { type: blob.type || "image/jpeg" }
+      );
+
+      if (fileInput) fileInput.value = "";
+      loadImage(file, () => {
+        applyExampleState(example);
+        if (fileNameEl) {
+          fileNameEl.textContent = `Example: ${example.label}`;
+        }
+        setStatus(
+          `Loaded example (${example.label}). E2 is left blank — compare the orange Check edge against your tape, then review area and volume.`
+        );
+      });
+    } catch (error) {
+      setStatus(error.message || "Could not load example data.", true);
+    }
   }
 
   function onPointerDown(event) {
@@ -573,6 +1224,10 @@
 
     const hit = hitVertex(point);
     if (hit >= 0) {
+      if (hit === 0 && state.vertices.length >= 3 && !state.closed) {
+        closePolygon();
+        return;
+      }
       state.dragIndex = hit;
       canvas.setPointerCapture?.(event.pointerId);
       return;
@@ -648,7 +1303,6 @@
       el.textContent = areaHint();
     });
     renderEdgesTable();
-    computeResults();
   }
 
   function sendToArea() {
@@ -679,6 +1333,7 @@
     if (fileNameEl) fileNameEl.textContent = "No photo selected";
     if (areaInput) areaInput.value = "";
     if (depthInput) depthInput.value = "";
+    state.areaManualOverride = false;
     setStatus("");
   }
 
@@ -707,12 +1362,23 @@
   canvas?.addEventListener("pointerup", onPointerUp);
   canvas?.addEventListener("pointercancel", onPointerUp);
 
-  areaInput?.addEventListener("input", computeResults);
-  depthInput?.addEventListener("input", computeResults);
+  areaInput?.addEventListener("input", () => {
+    state.areaManualOverride = Boolean(areaInput.value.trim());
+    computeResults();
+    updateOverallStatus();
+  });
+  depthInput?.addEventListener("input", () => {
+    computeResults();
+    draw();
+  });
 
   unitTabs.forEach((tab) => {
     tab.addEventListener("click", () => setUnitSystem(tab.dataset.photoAreaUnits));
   });
+
+  computeFinalEdgeBtn?.addEventListener("click", computeFinalEdge);
+
+  loadExampleBtn?.addEventListener("click", loadExampleData);
 
   sendAreaBtn?.addEventListener("click", sendToArea);
   sendVolumeBtn?.addEventListener("click", sendToVolume);
@@ -721,9 +1387,11 @@
 
   updateToolbar();
   updateResultDisplay();
+  updateComputeFinalEdgeButton();
 
   window.PhotoAreaTool = {
     reset,
+    loadExample: loadExampleData,
     getAreaSquareMeters: () => state.areaSquareMeters,
   };
 })();

@@ -46,8 +46,39 @@
     };
   }
 
+  /** Photo area: front walkway traced from PXL_20260817_212655222.jpg with field tape measurements. */
+  function getPhotoAreaExample() {
+    return {
+      label: "Front walkway (field measurements)",
+      imageUrl: "examples/photo-area/walkway-example.jpg?v=4",
+      imageFileName: "PXL_20260817_212655222.jpg",
+      unitSystem: "imperial-ftin",
+      // Normalized corners on the bundled 1024×576 photo (not the full-res phone upload).
+      // E3 is short (3') and E4 is long (10' 4-1/2") along the back of the walkway.
+      vertices: [
+        { x: 0.919, y: 0.845 },
+        { x: 0.173, y: 0.917 },
+        { x: 0.142, y: 0.403 },
+        { x: 0.205, y: 0.425 },
+        { x: 0.565, y: 0.506 },
+        { x: 0.830, y: 0.680 },
+      ],
+      edgeLengths: [
+        "5' 7-1/2\"",
+        "",
+        "3'",
+        "10' 4-1/2\"",
+        "2' 7-1/2\"",
+        "3' 0-1/2\"",
+      ],
+      depth: "3\"",
+      runComputeFinalEdge: true,
+    };
+  }
+
   global.ExampleData = {
     getDistanceExample,
     getPlaneExample,
+    getPhotoAreaExample,
   };
 })(window);

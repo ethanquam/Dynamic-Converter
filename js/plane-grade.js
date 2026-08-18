@@ -13,6 +13,7 @@ if (!window.Units || !window.CsvImport) {
   const view3dContainer = document.getElementById("plane-view3d-container");
   const view3dPlaceholder = document.getElementById("view3d-placeholder");
   const assignmentPanel = document.getElementById("point-assignment-panel");
+  const emptyPanel = document.getElementById("plane-grade-empty");
   const assignmentBody = document.getElementById("point-assignment-body");
   const adjustedResultsPanel = document.getElementById("adjusted-results-panel");
   const adjustedResultsList = document.getElementById("adjusted-results-list");
@@ -249,7 +250,9 @@ if (!window.Units || !window.CsvImport) {
 
     function renderAssignmentTable() {
       assignmentBody.innerHTML = "";
-      assignmentPanel.hidden = points.length === 0;
+      const hasPoints = points.length > 0;
+      assignmentPanel.hidden = !hasPoints;
+      if (emptyPanel) emptyPanel.hidden = hasPoints;
 
       points.forEach((point) => {
         assignmentBody.appendChild(createAssignmentRow(point));
@@ -468,7 +471,6 @@ if (!window.Units || !window.CsvImport) {
         adjust: false,
         source: "manual",
       });
-      assignmentPanel.hidden = false;
       renderAssignmentTable();
       updatePlaneGrade();
     }

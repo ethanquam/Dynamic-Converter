@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Dynamic Converter v1</title>
-  <link rel="stylesheet" href="css/styles.css?v=39">
+  <link rel="stylesheet" href="css/styles.css?v=68">
 </head>
 <body>
   <div class="app">
@@ -70,7 +70,8 @@
           <a class="app-nav-link" href="#area-converter-heading">Area</a>
           <a class="app-nav-link" href="#volume-converter-heading">Volume</a>
           <a class="app-nav-link" href="#construction-calc-heading">Calculator</a>
-          <a class="app-nav-link" href="#pythagorean-heading">Pythagorean</a>
+          <a class="app-nav-link" href="#pythagorean-heading">Shapes</a>
+          <a class="app-nav-link" href="#photo-area-heading">Photo Area</a>
           <a class="app-nav-link app-nav-link--page" href="#survey" data-page-link="survey">Survey Tools</a>
         </div>
         <button type="button" class="app-nav-link app-nav-link--feedback" data-feedback-link>
@@ -397,28 +398,38 @@
     <section class="pythagorean-section" aria-labelledby="pythagorean-heading">
       <div class="section-header">
         <div>
-          <h2 id="pythagorean-heading">Pythagorean Calculator</h2>
-          <p class="section-subtitle">
+          <h2 id="pythagorean-heading">Shape Calculators</h2>
+          <p id="pythag-shape-subtitle" class="section-subtitle">
             Enter any two sides of a right triangle — the third updates instantly.
           </p>
         </div>
       </div>
 
-      <div class="pythag-input-tabs" role="tablist" aria-label="Pythagorean units">
+      <div class="pythag-shape-tabs" role="tablist" aria-label="Calculator shape">
+        <button type="button" class="pythag-shape-tab is-active" data-pythag-shape="triangle" role="tab" aria-selected="true">
+          Right triangle
+        </button>
+        <button type="button" class="pythag-shape-tab" data-pythag-shape="circle" role="tab" aria-selected="false">
+          Circle
+        </button>
+      </div>
+
+      <div class="pythag-input-tabs" role="tablist" aria-label="Shape calculator units">
         <button type="button" class="pythag-input-tab is-active" data-pythag-units="imperial" role="tab" aria-selected="true">
           <span class="pythag-input-tab-text pythag-input-tab-text--long">Imperial (decimal ft)</span>
           <span class="pythag-input-tab-text pythag-input-tab-text--short">Decimal ft</span>
-        </button>
-        <button type="button" class="pythag-input-tab" data-pythag-units="imperial-ftin" role="tab" aria-selected="false">
-          <span class="pythag-input-tab-text pythag-input-tab-text--long">Imperial (ft/in)</span>
-          <span class="pythag-input-tab-text pythag-input-tab-text--short">Ft/in</span>
         </button>
         <button type="button" class="pythag-input-tab" data-pythag-units="metric" role="tab" aria-selected="false">
           <span class="pythag-input-tab-text pythag-input-tab-text--long">Metric (decimal m)</span>
           <span class="pythag-input-tab-text pythag-input-tab-text--short">Metric</span>
         </button>
+        <button type="button" class="pythag-input-tab" data-pythag-units="imperial-ftin" role="tab" aria-selected="false">
+          <span class="pythag-input-tab-text pythag-input-tab-text--long">Imperial (ft/in)</span>
+          <span class="pythag-input-tab-text pythag-input-tab-text--short">Ft/in</span>
+        </button>
       </div>
 
+      <div id="pythag-triangle-panel" class="pythag-shape-panel">
       <div class="pythagorean-layout">
         <div class="pythag-diagram-panel" id="pythag-diagram-panel">
           <svg class="pythag-diagram" id="pythag-diagram" viewBox="0 0 240 210" role="img" aria-label="Right triangle diagram">
@@ -479,6 +490,17 @@
               <span class="unit" data-pythag-unit-label>ft</span>
             </div>
           </section>
+
+          <section class="measure-row measure-row--output" id="pythag-area-row" aria-live="polite">
+            <div class="measure-label">
+              <span class="measure-name">Area</span>
+              <span class="measure-hint">½ × Leg A × Leg B</span>
+            </div>
+            <div class="measure-input-wrap">
+              <output id="pythag-area-value" class="pythag-area-value" for="pythag-a pythag-b">—</output>
+              <span class="unit" data-pythag-area-unit-label>ft²</span>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -486,9 +508,218 @@
         <button type="button" id="pythag-send-distance" class="btn-panel-action" disabled>
           Send hypotenuse to Distance Converter
         </button>
+        <button type="button" id="pythag-send-area" class="btn-panel-action" disabled>
+          Send area to Area Converter
+        </button>
+      </div>
+      </div>
+
+      <div id="pythag-circle-panel" class="pythag-shape-panel" hidden>
+        <div class="pythagorean-layout">
+          <div class="pythag-diagram-panel" id="pythag-circle-diagram-panel">
+            <svg class="pythag-diagram pythag-circle-diagram" id="pythag-circle-diagram" viewBox="0 0 240 210" role="img" aria-label="Circle diagram">
+              <circle cx="120" cy="105" r="72" fill="rgba(107, 143, 88, 0.12)" stroke="var(--accent-dim)" stroke-width="2"/>
+              <line x1="120" y1="105" x2="192" y2="105" stroke="var(--accent-dim)" stroke-width="2"/>
+              <circle cx="120" cy="105" r="3.5" fill="var(--accent-dim)"/>
+              <text x="156" y="98" text-anchor="middle" class="pythag-diagram-callout">
+                <tspan class="pythag-diagram-label" x="156" dy="0">Radius</tspan>
+                <tspan class="pythag-diagram-value" data-circle="radius" x="156" dy="22">—</tspan>
+              </text>
+              <text x="120" y="28" text-anchor="middle" class="pythag-diagram-callout">
+                <tspan class="pythag-diagram-label" x="120" dy="0">Diameter</tspan>
+                <tspan class="pythag-diagram-value" data-circle="diameter" x="120" dy="22">—</tspan>
+              </text>
+            </svg>
+            <p class="pythag-formula">A = πr²</p>
+          </div>
+
+          <div class="converter-grid pythag-grid">
+            <section class="measure-row" data-pythag-circle-field="radius">
+              <div class="measure-label">
+                <span class="measure-name">Radius</span>
+                <span class="measure-hint" data-pythag-circle-unit-hint>Decimal feet</span>
+              </div>
+              <div class="measure-input-wrap">
+                <input type="text" autocomplete="off" spellcheck="false"
+                       id="pythag-circle-radius" aria-label="Radius" placeholder="e.g. 3">
+                <span class="unit" data-pythag-circle-unit-label>ft</span>
+              </div>
+            </section>
+
+            <section class="measure-row" data-pythag-circle-field="diameter">
+              <div class="measure-label">
+                <span class="measure-name">Diameter</span>
+                <span class="measure-hint" data-pythag-circle-unit-hint>Decimal feet</span>
+              </div>
+              <div class="measure-input-wrap">
+                <input type="text" autocomplete="off" spellcheck="false"
+                       id="pythag-circle-diameter" aria-label="Diameter" placeholder="e.g. 6">
+                <span class="unit" data-pythag-circle-unit-label>ft</span>
+              </div>
+            </section>
+
+            <section class="measure-row measure-row--output" id="pythag-circle-area-row" aria-live="polite">
+              <div class="measure-label">
+                <span class="measure-name">Area</span>
+                <span class="measure-hint">π × r²</span>
+              </div>
+              <div class="measure-input-wrap">
+                <output id="pythag-circle-area-value" class="pythag-area-value" for="pythag-circle-radius">—</output>
+                <span class="unit" data-pythag-circle-area-unit-label>ft²</span>
+              </div>
+            </section>
+
+            <section class="measure-row" data-pythag-circle-field="depth">
+              <div class="measure-label">
+                <span class="measure-name">Depth <span class="photo-area-optional-tag">(optional)</span></span>
+                <span class="measure-hint" data-pythag-circle-unit-hint>Decimal feet</span>
+              </div>
+              <div class="measure-input-wrap">
+                <input type="text" autocomplete="off" spellcheck="false"
+                       id="pythag-circle-depth" aria-label="Depth" placeholder="e.g. 0.5">
+                <span class="unit" data-pythag-circle-unit-label>ft</span>
+              </div>
+            </section>
+
+            <section class="measure-row measure-row--output" id="pythag-circle-volume-row" aria-live="polite">
+              <div class="measure-label">
+                <span class="measure-name">Volume</span>
+                <span class="measure-hint">Area × depth</span>
+              </div>
+              <div class="measure-input-wrap">
+                <output id="pythag-circle-volume-value" class="pythag-area-value" for="pythag-circle-depth">—</output>
+                <span class="unit" data-pythag-circle-volume-unit-label>ft³</span>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div class="pythag-actions">
+          <button type="button" id="pythag-circle-send-area" class="btn-panel-action" disabled>
+            Send area to Area Converter
+          </button>
+          <button type="button" id="pythag-circle-send-volume" class="btn-panel-action" disabled>
+            Send volume to Volume Converter
+          </button>
+        </div>
       </div>
 
       <p id="pythag-status-line" class="status-line" hidden></p>
+    </section>
+
+    <section class="photo-area-section" aria-labelledby="photo-area-heading">
+      <div class="section-header">
+        <div>
+          <h2 id="photo-area-heading">Photo Area &amp; Volume <span class="section-beta-tag">(Beta)</span></h2>
+          <p class="section-subtitle">
+            Upload a site photo, trace the outline, enter field measurements, then record area and optional volume.
+          </p>
+        </div>
+        <a class="btn-panel-action photo-area-how-it-works" href="examples/photo-area/how-it-works.html" target="_blank" rel="noopener noreferrer">
+          How it works
+        </a>
+      </div>
+
+      <p class="photo-area-hint">
+        Trace the outline on your photo to label each edge, then type in tape-measure lengths from the field.
+        Angled photos distort pixel lengths — measurements are entered manually, not calculated from the image.
+        Open <strong>How it works</strong> for a full walkway example with field measurements and computed check edge.
+        Images stay on your device; nothing is uploaded to a server.
+      </p>
+
+      <div class="photo-area-input-tabs" role="tablist" aria-label="Photo area units">
+        <button type="button" class="photo-area-input-tab is-active" data-photo-area-units="imperial" role="tab" aria-selected="true">
+          <span class="photo-area-input-tab-text photo-area-input-tab-text--long">Imperial (decimal ft)</span>
+          <span class="photo-area-input-tab-text photo-area-input-tab-text--short">Decimal ft</span>
+        </button>
+        <button type="button" class="photo-area-input-tab" data-photo-area-units="metric" role="tab" aria-selected="false">
+          <span class="photo-area-input-tab-text photo-area-input-tab-text--long">Metric (decimal m)</span>
+          <span class="photo-area-input-tab-text photo-area-input-tab-text--short">Metric</span>
+        </button>
+        <button type="button" class="photo-area-input-tab" data-photo-area-units="imperial-ftin" role="tab" aria-selected="false">
+          <span class="photo-area-input-tab-text photo-area-input-tab-text--long">Imperial (ft/in)</span>
+          <span class="photo-area-input-tab-text photo-area-input-tab-text--short">Ft/in</span>
+        </button>
+      </div>
+
+      <div class="photo-area-upload-panel">
+        <div class="photo-area-upload-actions">
+          <label class="photo-area-file-label" for="photo-area-file-input">
+            <input type="file" id="photo-area-file-input" accept="image/*" hidden>
+            <span class="btn-import-csv">Choose photo</span>
+            <span id="photo-area-file-name" class="csv-file-name">No photo selected</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="photo-area-workspace" id="photo-area-workspace" hidden>
+        <div class="photo-area-toolbar" id="photo-area-toolbar">
+          <button type="button" id="photo-area-undo" class="btn-panel-action btn-panel-action--muted" disabled>Undo point</button>
+          <button type="button" id="photo-area-close-shape" class="btn-panel-action" disabled>Close shape</button>
+          <button type="button" id="photo-area-clear" class="btn-panel-action btn-panel-action--muted" disabled>Clear trace</button>
+        </div>
+        <p class="photo-area-trace-hint" id="photo-area-trace-hint">Click or tap to place corners. Drag points to adjust. Click the first point or Close shape when done. After closing, tap an edge on the photo to identify it in the table. When you enter depth, a fixed extrusion preview appears on the same outline — no pan or separate 3D view.</p>
+        <div class="photo-area-canvas-wrap" id="photo-area-canvas-wrap">
+          <canvas id="photo-area-canvas" aria-label="Photo trace canvas"></canvas>
+        </div>
+      </div>
+
+      <p id="photo-area-status-line" class="status-line photo-area-progress-line" hidden></p>
+
+      <div class="photo-area-edges-panel" id="photo-area-edges-panel" hidden>
+        <h3 class="photo-area-edges-title">Edge measurements</h3>
+        <p class="photo-area-edges-note" id="photo-area-edges-note"><strong>E1</strong> is points 1→2, <strong>E2</strong> is 2→3, and so on. Enter all but one edge, then click <strong>Compute final edge</strong> — the result is marked orange <strong>Check</strong> for field verification.</p>
+        <div class="photo-area-edges-actions">
+          <button type="button" id="photo-area-compute-final-edge" class="btn-panel-action" hidden disabled>
+            Compute final edge
+          </button>
+        </div>
+        <div class="photo-area-edges-table-wrap">
+          <table class="photo-area-edges-table" aria-label="Polygon edge measurements">
+            <thead>
+              <tr>
+                <th scope="col">Edge</th>
+                <th scope="col">Photo (px)</th>
+                <th scope="col">Measured length</th>
+              </tr>
+            </thead>
+            <tbody id="photo-area-edges-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="photo-area-results">
+        <div class="photo-area-results-fields">
+          <label class="photo-area-result-field" for="photo-area-area">
+            <span class="photo-area-result-label">Surface area <span class="photo-area-depth-hint" data-photo-area-area-hint>Decimal ft²</span></span>
+            <div class="measure-input-wrap">
+              <input type="text" id="photo-area-area" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     aria-label="Surface area" placeholder="Auto-calculated from edges">
+            </div>
+          </label>
+          <label class="photo-area-result-field" for="photo-area-depth">
+            <span class="photo-area-result-label">Depth <span class="photo-area-optional-tag">optional</span> <span class="photo-area-depth-hint" data-photo-area-unit-hint>Decimal feet</span></span>
+            <div class="measure-input-wrap">
+              <input type="text" id="photo-area-depth" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     aria-label="Depth for volume (optional)" placeholder="Optional">
+            </div>
+          </label>
+        </div>
+        <div class="photo-area-result-row">
+          <span class="photo-area-result-label">Volume</span>
+          <span class="photo-area-result-value" id="photo-area-result-volume">—</span>
+        </div>
+      </div>
+
+      <div class="photo-area-actions">
+        <button type="button" id="photo-area-send-area" class="btn-panel-action" disabled>
+          Send area to Area Converter
+        </button>
+        <button type="button" id="photo-area-send-volume" class="btn-panel-action" disabled>
+          Send volume to Volume Converter
+        </button>
+      </div>
+
     </section>
 
     <footer class="footer">
@@ -504,7 +735,8 @@
           <li><strong>Calculator (Metric):</strong> enter decimal meters (e.g. <code>1.5</code> or <code>0.3048</code>)</li>
           <li><strong>Calculator (Standard):</strong> plain decimal numbers — no units, no converter export</li>
           <li><strong>Calculator (Tip):</strong> enter check amount and tip % for total, or max spend to find the highest tip within budget</li>
-          <li><strong>Pythagorean:</strong> decimal feet or meters, or feet/inches like <code>3&#39;-4 1/2&quot;</code></li>
+          <li><strong>Shape calculators:</strong> right triangle or circle — decimal feet or meters, or feet/inches like <code>3&#39;-4 1/2&quot;</code></li>
+          <li><strong>Photo Area:</strong> upload a photo, trace the outline, enter field edge lengths (decimal ft, m, or ft/in) and surface area manually</li>
         </ul>
       </details>
     </footer>
@@ -606,7 +838,6 @@
 
       <div class="point-distance-layout">
         <div class="point-distance-measurements">
-          <h3 class="results-group-title">Direct Distance</h3>
           <div class="distance-results" id="distance-results">
             <div class="result-row">
               <div class="result-label">
@@ -767,8 +998,28 @@
         </p>
       </div>
 
+      <div class="plane-grade-setup">
+        <details class="manual-points-panel">
+          <summary>Manual point entry</summary>
+          <p class="manual-points-desc">
+            Add individual points by hand. They appear in the assignment table once added.
+          </p>
+          <button type="button" id="add-plane-point" class="btn-add-point">+ Add manual point</button>
+        </details>
+      </div>
+
       <div class="plane-grade-layout">
         <div class="plane-grade-inputs">
+          <div id="plane-grade-empty" class="plane-grade-empty">
+            <div class="assignment-header">
+              <h3 class="results-group-title">Points</h3>
+              <p class="assignment-hint">
+                Choose exactly two points to define the plane (P1 &amp; P2), then check which others to adjust.
+              </p>
+            </div>
+            <div class="plane-grade-empty-body" aria-hidden="true"></div>
+          </div>
+
           <div id="point-assignment-panel" class="point-assignment-panel" hidden>
             <div class="assignment-header">
               <h3 class="results-group-title">Points</h3>
@@ -798,15 +1049,7 @@
             </div>
           </div>
 
-          <details class="manual-points-panel">
-            <summary>Manual point entry</summary>
-            <p class="manual-points-desc">
-              Add individual points by hand. They appear in the assignment table above once added.
-            </p>
-            <button type="button" id="add-plane-point" class="btn-add-point">+ Add manual point</button>
-          </details>
-
-          <p id="plane-status-line" class="status-line">Import a CSV file or use manual point entry.</p>
+          <p id="plane-status-line" class="status-line">Import a CSV file or add manual points.</p>
         </div>
 
         <div class="isometric-panel" id="plane-view3d-panel">
@@ -972,13 +1215,14 @@
   <script src="js/scroll-lock.js"></script>
   <script src="js/units.js"></script>
   <script src="js/csv-import.js"></script>
-  <script src="js/example-data.js"></script>
+  <script src="js/example-data.js?v=6"></script>
   <script src="js/tape-measure.js"></script>
   <script src="js/converter.js"></script>
   <script src="js/area-converter.js"></script>
   <script src="js/volume-converter.js"></script>
   <script src="js/construction-calculator.js"></script>
-  <script src="js/pythagorean-calculator.js"></script>
+  <script src="js/pythagorean-calculator.js?v=4"></script>
+  <script src="js/photo-area.js?v=64"></script>
   <script type="module" src="js/point-distance.js"></script>
   <script type="module" src="js/plane-grade.js"></script>
 </body>

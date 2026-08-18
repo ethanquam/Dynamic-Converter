@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Photo Area &amp; Volume — How it works</title>
+  <link rel="stylesheet" href="../../css/styles.css?v=64">
+  <style>
+    body {
+      margin: 0;
+      background: var(--bg);
+    }
+    .how-it-works-page {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1.25rem max(1rem, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    }
+    .how-it-works-banner {
+      margin: 0 0 1rem;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .how-it-works-photo {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: calc(var(--radius) - 2px);
+    }
+    .how-it-works-demo .photo-area-workspace,
+    .how-it-works-demo .photo-area-edges-panel {
+      display: block !important;
+    }
+    .how-it-works-demo .photo-area-input-tab:nth-child(1),
+    .how-it-works-demo .photo-area-input-tab:nth-child(2) {
+      opacity: 0.55;
+    }
+    .how-it-works-demo .photo-area-input-tab:nth-child(3) {
+      opacity: 1;
+    }
+    .how-it-works-demo .btn-import-csv,
+    .how-it-works-demo .btn-panel-action,
+    .how-it-works-demo .photo-area-input-tab,
+    .how-it-works-demo input {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="how-it-works-page">
+    <p class="how-it-works-banner">Example: front walkway with field measurements, computed check edge (E2), area, and volume. Close this tab and use <strong>Choose photo</strong> in the tool to start your own trace.</p>
+
+    <section class="photo-area-section how-it-works-demo" aria-label="Photo Area example">
+      <div class="section-header">
+        <div>
+          <h2>Photo Area &amp; Volume <span class="section-beta-tag">(Beta)</span></h2>
+          <p class="section-subtitle">Upload a site photo, trace the outline, enter field measurements, then record area and optional volume.</p>
+        </div>
+      </div>
+
+      <p class="photo-area-hint">
+        Trace the outline on your photo to label each edge, then type in tape-measure lengths from the field.
+        Angled photos distort pixel lengths — measurements are entered manually, not calculated from the image.
+        Enter all but one edge, then recompute the final edge for field verification.
+      </p>
+
+      <div class="photo-area-input-tabs" aria-hidden="true">
+        <button type="button" class="photo-area-input-tab" disabled>Imperial (decimal ft)</button>
+        <button type="button" class="photo-area-input-tab" disabled>Metric (decimal m)</button>
+        <button type="button" class="photo-area-input-tab is-active" disabled>Imperial (ft/in)</button>
+      </div>
+
+      <div class="photo-area-upload-panel">
+        <div class="photo-area-upload-actions">
+          <span class="btn-import-csv">Choose photo</span>
+          <span class="csv-file-name">Example: Front walkway (field measurements)</span>
+        </div>
+      </div>
+
+      <div class="photo-area-workspace">
+        <img class="how-it-works-photo" src="walkway-example.jpg" width="1024" height="576"
+             alt="Walkway traced with six corners, edge labels, and E2 check edge at about 13 feet 3 inches">
+      </div>
+
+      <div class="photo-area-edges-panel">
+        <h3 class="photo-area-edges-title">Edge measurements</h3>
+        <p class="photo-area-edges-note"><strong>E1</strong> is points 1→2, <strong>E2</strong> is 2→3, and so on. Enter all but one edge, then click <strong>Compute final edge</strong> — the result is marked orange <strong>Check</strong> for field verification.</p>
+        <div class="photo-area-edges-table-wrap">
+          <table class="photo-area-edges-table">
+            <thead>
+              <tr>
+                <th scope="col">Edge</th>
+                <th scope="col">Photo (px)</th>
+                <th scope="col">Measured length</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="is-example-edge">
+                <td class="photo-area-edge-id" data-label="Edge"><span class="photo-area-edge-badge">E1</span> <span class="photo-area-edge-endpoints">1→2</span></td>
+                <td class="photo-area-edges-pixel" data-label="Photo (px)">549.1 px</td>
+                <td class="photo-area-edge-length-cell" data-label="Measured length"><input type="text" class="photo-area-edge-length photo-area-edge-length--example" value="5' 7-1/2&quot;" readonly tabindex="-1"><span class="photo-area-example-badge">Example</span></td>
+              </tr>
+              <tr class="is-example-edge is-auto-edge">
+                <td class="photo-area-edge-id" data-label="Edge"><span class="photo-area-edge-badge">E2</span> <span class="photo-area-edge-endpoints">2→3</span></td>
+                <td class="photo-area-edges-pixel" data-label="Photo (px)">377.7 px</td>
+                <td class="photo-area-edge-length-cell" data-label="Measured length"><input type="text" class="photo-area-edge-length photo-area-edge-length--example photo-area-edge-length--auto" value="13'-3 1/16&quot;" readonly tabindex="-1"><span class="photo-area-auto-badge">Check</span></td>
+              </tr>
+              <tr class="is-example-edge">
+                <td class="photo-area-edge-id" data-label="Edge"><span class="photo-area-edge-badge">E3</span> <span class="photo-area-edge-endpoints">3→4</span></td>
+                <td class="photo-area-edges-pixel" data-label="Photo (px)">108.3 px</td>
+                <td class="photo-area-edge-length-cell" data-label="Measured length"><input type="text" class="photo-area-edge-length photo-area-edge-length--example" value="3'" readonly tabindex="-1"><span class="photo-area-example-badge">Example</span></td>
+              </tr>
+              <tr class="is-example-edge">
+                <td class="photo-area-edge-id" data-label="Edge"><span class="photo-area-edge-badge">E4</span> <span class="photo-area-edge-endpoints">4→5</span></td>
+                <td class="photo-area-edges-pixel" data-label="Photo (px)">193.0 px</td>
+                <td class="photo-area-edge-length-cell" data-label="Measured length"><input type="text" class="photo-area-edge-length photo-area-edge-length--example" value="10' 4-1/2&quot;" readonly tabindex="-1"><span class="photo-area-example-badge">Example</span></td>
+              </tr>
+              <tr class="is-example-edge">
+                <td class="photo-area-edge-id" data-label="Edge"><span class="photo-area-edge-badge">E5</span> <span class="photo-area-edge-endpoints">5→6</span></td>
+                <td class="photo-area-edges-pixel" data-label="Photo (px)">180.7 px</td>
+                <td class="photo-area-edge-length-cell" data-label="Measured length"><input type="text" class="photo-area-edge-length photo-area-edge-length--example" value="2' 7-1/2&quot;" readonly tabindex="-1"><span class="photo-area-example-badge">Example</span></td>
+              </tr>
+              <tr class="is-example-edge">
+                <td class="photo-area-edge-id" data-label="Edge"><span class="photo-area-edge-badge">E6</span> <span class="photo-area-edge-endpoints">6→1</span></td>
+                <td class="photo-area-edges-pixel" data-label="Photo (px)">171.5 px</td>
+                <td class="photo-area-edge-length-cell" data-label="Measured length"><input type="text" class="photo-area-edge-length photo-area-edge-length--example" value="3' 0-1/2&quot;" readonly tabindex="-1"><span class="photo-area-example-badge">Example</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="photo-area-results photo-area-results--example">
+        <div class="photo-area-results-fields">
+          <label class="photo-area-result-field">
+            <span class="photo-area-result-label">Surface area <span class="photo-area-depth-hint">Decimal ft²</span></span>
+            <div class="measure-input-wrap">
+              <input type="text" class="photo-area-edge-length--example" value="62.9785" readonly tabindex="-1">
+            </div>
+          </label>
+          <label class="photo-area-result-field">
+            <span class="photo-area-result-label">Depth <span class="photo-area-optional-tag">optional</span> <span class="photo-area-depth-hint">e.g. 12'-6 1/2&quot;</span></span>
+            <div class="measure-input-wrap">
+              <input type="text" class="photo-area-edge-length--example" value="3&quot;" readonly tabindex="-1">
+            </div>
+          </label>
+        </div>
+        <div class="photo-area-result-row">
+          <span class="photo-area-result-label">Volume</span>
+          <span class="photo-area-result-value">15.7446 ft³</span>
+        </div>
+      </div>
+
+      <div class="photo-area-actions">
+        <button type="button" class="btn-panel-action" disabled>Send area to Area Converter</button>
+        <button type="button" class="btn-panel-action" disabled>Send volume to Volume Converter</button>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

@@ -8,6 +8,8 @@
   const isCoarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
   const HANDLE_RADIUS = isCoarsePointer ? 18 : 12;
   const CLOSE_SNAP_PX = isCoarsePointer ? 22 : 16;
+  const LONG_PRESS_MS = 480;
+  const PRESS_MOVE_CANCEL_PX = 12;
   const CLOSURE_OVERLAY_MAX_METERS = 0.25;
 
   const canvas = document.getElementById("photo-area-canvas");
@@ -17,6 +19,7 @@
   const edgesPanelEl = document.getElementById("photo-area-edges-panel");
   const edgesBodyEl = document.getElementById("photo-area-edges-body");
   const undoBtn = document.getElementById("photo-area-undo");
+  const undoFloatBtn = document.getElementById("photo-area-undo-float");
   const closeBtn = document.getElementById("photo-area-close-shape");
   const clearBtn = document.getElementById("photo-area-clear");
   const statusLine = document.getElementById("photo-area-status-line");
@@ -45,6 +48,7 @@
     closed: false,
     edges: [],
     dragIndex: null,
+    pendingPress: null,
     highlightedEdgeIndex: null,
     areaSquareMeters: null,
     volumeCubicMeters: null,
@@ -527,6 +531,66 @@
 
   function distance(a, b) {
     return Math.hypot(b.x - a.x, b.y - a.y);
+  }
+
+  function closeSnapThreshold() {
+    if (!canvas) return CLOSE_SNAP_PX;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width) return CLOSE_SNAP_PX;
+    return CLOSE_SNAP_PX * (canvas.width / rect.width);
+  }
+
+  function clearPendingPress() {
+    const pending = state.pendingPress;
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    state.pendingPress = null;
+  }
+
+  function undoLastVertex() {
+    if (state.closed || state.vertices.length === 0) return;
+    clearPendingPress();
+    state.vertices.pop();
+    rebuildEdges();
+    updateToolbar();
+    draw();
+    setStatus(
+      state.vertices.length === 0
+        ? isCoarsePointer
+          ? "Press and hold on the photo to place the first corner."
+          : "Click the photo to place the first corner."
+        : "Last point removed."
+    );
+  }
+
+  function tryAddVertex(point) {
+    if (state.closed) return;
+
+    if (
+      state.vertices.length >= 3 &&
+      distance(point, state.vertices[0]) <= closeSnapThreshold()
+    ) {
+      closePolygon();
+      return;
+    }
+
+    state.vertices.push(point);
+    rebuildEdges();
+    updateToolbar();
+    draw();
+    setStatus(
+      state.vertices.length < 3
+        ? isCoarsePointer
+          ? "Add more corners, or close the shape when ready."
+          : "Add more corners, or close the shape when ready."
+        : isCoarsePointer
+          ? "Press and hold for more corners, or tap Close shape when done."
+          : "Click the first point or use Close shape when the outline is complete."
+    );
+  }
+
+  function usesTouchPlacement(event) {
+    return isCoarsePointer && event.pointerType === "touch";
   }
 
   function edgeEndpointLabels(edgeIndex) {
@@ -1096,7 +1160,12 @@
   }
 
   function updateToolbar() {
-    if (undoBtn) undoBtn.disabled = state.vertices.length === 0 || state.closed;
+    const canUndo = state.vertices.length > 0 && !state.closed;
+    if (undoBtn) undoBtn.disabled = !canUndo;
+    if (undoFloatBtn) {
+      undoFloatBtn.disabled = !canUndo;
+      undoFloatBtn.hidden = !isCoarsePointer || state.exampleStatic || !canUndo;
+    }
     if (closeBtn) closeBtn.disabled = state.closed || state.vertices.length < 3;
     if (clearBtn) clearBtn.disabled = !state.image;
     if (traceHintEl) traceHintEl.hidden = state.closed;
@@ -1142,7 +1211,11 @@
         setExampleViewMode(false);
         resetPolygon();
         if (fileNameEl) fileNameEl.textContent = file.name;
-        setStatus("Tap or click the photo to place corner points along the outline.");
+        setStatus(
+          isCoarsePointer
+            ? "Press and hold on the photo to place corner points. Scroll with one finger to see the whole image."
+            : "Click the photo to place corner points along the outline."
+        );
       }
       if (workspaceEl) workspaceEl.hidden = false;
       draw();
@@ -1157,6 +1230,7 @@
     workspaceEl?.classList.toggle("photo-area-workspace--static", isStatic);
     if (traceHintEl) traceHintEl.hidden = isStatic;
     canvasWrapEl?.classList.toggle("photo-area-canvas-wrap--static", isStatic);
+    if (undoFloatBtn) undoFloatBtn.hidden = isStatic || !isCoarsePointer;
     if (edgesNoteEl) {
       edgesNoteEl.textContent = isStatic
         ? "Sample field measurements from the walkway example — upload your own photo to trace and measure."
@@ -1336,12 +1410,13 @@
 
   function onPointerDown(event) {
     if (!state.image || !canvas || state.exampleStatic) return;
-    event.preventDefault();
     const point = canvasPoint(event);
     if (!point) return;
 
     const hit = hitVertex(point);
     if (hit >= 0) {
+      event.preventDefault();
+      clearPendingPress();
       if (hit === 0 && state.vertices.length >= 3 && !state.closed) {
         closePolygon();
         return;
@@ -1352,37 +1427,48 @@
     }
 
     if (state.closed) {
+      event.preventDefault();
       const edgeHit = hitEdge(point);
       if (edgeHit >= 0) {
         setHighlightedEdge(edgeHit);
         edgesBodyEl?.rows[edgeHit]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
         const lengthInput = edgesBodyEl?.rows[edgeHit]?.querySelector("[data-edge-length]");
         lengthInput?.focus();
-        return;
       }
       return;
     }
 
-    if (
-      state.vertices.length >= 3 &&
-      distance(point, state.vertices[0]) <= CLOSE_SNAP_PX * (canvas.width / canvas.getBoundingClientRect().width)
-    ) {
-      closePolygon();
+    if (usesTouchPlacement(event)) {
+      clearPendingPress();
+      state.pendingPress = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        point,
+        timer: window.setTimeout(() => {
+          if (!state.pendingPress) return;
+          state.pendingPress = null;
+          tryAddVertex(point);
+          navigator.vibrate?.(12);
+        }, LONG_PRESS_MS),
+      };
       return;
     }
 
-    state.vertices.push(point);
-    rebuildEdges();
-    updateToolbar();
-    draw();
-    setStatus(
-      state.vertices.length < 3
-        ? "Add more corners, or close the shape when ready."
-        : "Click the first point or use Close shape when the outline is complete."
-    );
+    event.preventDefault();
+    tryAddVertex(point);
   }
 
   function onPointerMove(event) {
+    const pending = state.pendingPress;
+    if (pending && event.pointerId === pending.pointerId) {
+      const moved = Math.hypot(event.clientX - pending.startX, event.clientY - pending.startY);
+      if (moved > PRESS_MOVE_CANCEL_PX) {
+        clearPendingPress();
+      }
+      return;
+    }
+
     if (state.dragIndex == null) return;
     event.preventDefault();
     const point = canvasPoint(event);
@@ -1396,6 +1482,10 @@
   }
 
   function onPointerUp(event) {
+    if (state.pendingPress?.pointerId === event.pointerId) {
+      clearPendingPress();
+    }
+
     if (state.dragIndex == null) return;
     state.dragIndex = null;
     canvas.releasePointerCapture?.(event.pointerId);
@@ -1463,13 +1553,8 @@
     loadImage(file);
   });
 
-  undoBtn?.addEventListener("click", () => {
-    if (state.closed || state.vertices.length === 0) return;
-    state.vertices.pop();
-    rebuildEdges();
-    updateToolbar();
-    draw();
-  });
+  undoBtn?.addEventListener("click", undoLastVertex);
+  undoFloatBtn?.addEventListener("click", undoLastVertex);
 
   closeBtn?.addEventListener("click", closePolygon);
 
@@ -1503,6 +1588,11 @@
   sendVolumeBtn?.addEventListener("click", sendToVolume);
 
   window.addEventListener("resize", draw);
+
+  if (traceHintEl && isCoarsePointer) {
+    traceHintEl.textContent =
+      "Press and hold to place corners. Drag points to adjust. Scroll the photo with one finger. Use Undo on the photo if you miss. After closing, tap an edge to identify it in the table.";
+  }
 
   updateToolbar();
   updateResultDisplay();

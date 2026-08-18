@@ -3423,6 +3423,30 @@ body.is-feedback-open {
     font-size: 1rem;
   }
 
+  .photo-area-edge-badge {
+    min-width: 2rem;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.92rem;
+  }
+
+  .photo-area-edge-endpoints {
+    font-size: 0.92rem;
+  }
+
+  .photo-area-auto-badge,
+  .photo-area-example-badge {
+    font-size: 0.78rem;
+    padding: 0.18rem 0.5rem;
+  }
+
+  .photo-area-edges-table td {
+    font-size: 0.95rem;
+  }
+
+  .photo-area-edges-table td::before {
+    font-size: 0.72rem;
+  }
+
   .photo-area-result-field .measure-input-wrap input {
     min-height: 2.75rem;
     font-size: 1rem;

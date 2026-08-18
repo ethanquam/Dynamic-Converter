@@ -515,6 +515,25 @@
     return "Decimal ft²";
   }
 
+  function canvasDisplayScale() {
+    if (!canvas) return 1;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !canvas.width) return 1;
+    return rect.width / canvas.width;
+  }
+
+  function screenToCanvasFont(screenPx) {
+    const scale = canvasDisplayScale();
+    return scale > 0 ? screenPx / scale : screenPx;
+  }
+
+  function edgeLabelFontSizes() {
+    if (isCoarsePointer) {
+      return { title: 17, sub: 14 };
+    }
+    return { title: 14, sub: 11 };
+  }
+
   function canvasPoint(event) {
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
@@ -982,7 +1001,9 @@
   }
 
   function drawEdgeLabels(ctx) {
-    const fontSize = Math.max(11, canvas.width / 75);
+    const { title: titleScreenPx, sub: subScreenPx } = edgeLabelFontSizes();
+    const fontSize = screenToCanvasFont(titleScreenPx);
+    const subFontSize = screenToCanvasFont(subScreenPx);
 
     state.edges.forEach((edge, index) => {
       const { labelPoint, angle } = edgeGeometry(index, state.vertices);
@@ -993,7 +1014,7 @@
       const label = isAuto ? `E${index + 1} · Check` : `E${index + 1}`;
       const subLabel = isAuto
         ? formatLength(state.autoEdgeMeters)
-        : `${Math.round(edge.pixelLength)} px`;
+        : edge.lengthText.trim() || `${Math.round(edge.pixelLength)} px`;
 
       ctx.save();
       ctx.translate(labelPoint.x, labelPoint.y);
@@ -1004,10 +1025,10 @@
       ctx.textBaseline = "middle";
 
       const titleW = ctx.measureText(label).width;
-      ctx.font = `${Math.max(9, fontSize * 0.78)}px Segoe UI, system-ui, sans-serif`;
+      ctx.font = `${subFontSize}px Segoe UI, system-ui, sans-serif`;
       const subW = ctx.measureText(subLabel).width;
-      const boxW = Math.max(titleW, subW) + fontSize * 0.9;
-      const boxH = fontSize * (isAuto ? 2.05 : 1.85);
+      const boxW = Math.max(titleW, subW) + fontSize * 1.05;
+      const boxH = fontSize + subFontSize * 1.35;
       const x = -boxW * 0.5;
       const y = -boxH * 0.5;
 
@@ -1036,10 +1057,10 @@
 
       ctx.fillStyle = isAuto ? "#c45a11" : "#2f4a24";
       ctx.font = `bold ${fontSize}px Segoe UI, system-ui, sans-serif`;
-      ctx.fillText(label, 0, -fontSize * 0.22);
-      ctx.font = `${Math.max(9, fontSize * 0.78)}px Segoe UI, system-ui, sans-serif`;
+      ctx.fillText(label, 0, -subFontSize * 0.42);
+      ctx.font = `${subFontSize}px Segoe UI, system-ui, sans-serif`;
       ctx.fillStyle = isAuto ? "#a04a0e" : "#527a42";
-      ctx.fillText(subLabel, 0, fontSize * 0.48);
+      ctx.fillText(subLabel, 0, fontSize * 0.42);
       ctx.restore();
     });
   }
@@ -1129,7 +1150,7 @@
       ctx.stroke();
 
       ctx.fillStyle = index === 0 && verts.length >= 3 && !state.closed ? "#527a42" : "#ffffff";
-      ctx.font = `bold ${Math.max(11, radius)}px Segoe UI, system-ui, sans-serif`;
+      ctx.font = `bold ${screenToCanvasFont(isCoarsePointer ? 15 : 12)}px Segoe UI, system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(String(index + 1), point.x, point.y);

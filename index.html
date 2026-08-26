@@ -8,70 +8,87 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Dynamic Converter v1</title>
-  <link rel="stylesheet" href="css/styles.css?v=70">
+  <link rel="stylesheet" href="css/styles.css?v=84">
 </head>
 <body>
   <div class="app">
-    <header class="header" id="header-converters">
-      <div class="header-text">
-        <h1>Dynamic Distance Converter</h1>
-        <p class="subtitle">Enter any format — all others update instantly.</p>
-      </div>
-      <div class="precision-control">
-        <label for="precision">Fraction precision</label>
-        <select id="precision">
-          <option value="2">1/2″</option>
-          <option value="4">1/4″</option>
-          <option value="8">1/8″</option>
-          <option value="16" selected>1/16″</option>
-          <option value="32">1/32″</option>
-          <option value="64">1/64″</option>
-        </select>
-      </div>
-    </header>
-
-    <header class="header" id="header-survey" hidden aria-hidden="true">
-      <div class="header-text">
-        <h1>Survey Tools &amp; Plane Adjustments</h1>
-        <p class="subtitle">Point-to-point distance, grade plane adjustment, and 3D preview.</p>
-      </div>
-    </header>
-
     <div class="app-top-nav" id="app-top-nav">
-      <button
-        type="button"
-        class="app-top-nav-toggle"
-        id="app-top-nav-toggle"
-        aria-expanded="true"
-        aria-controls="app-top-nav-body"
-      >
-        <svg class="app-top-nav-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="app-top-nav-toggle-label app-top-nav-toggle-label--expanded">Hide navigation</span>
-        <span class="app-top-nav-toggle-label app-top-nav-toggle-label--collapsed" hidden>Show navigation</span>
-      </button>
+      <div class="app-top-nav-bar" id="app-top-nav-bar">
+        <button
+          type="button"
+          class="app-top-nav-toggle"
+          id="app-top-nav-toggle"
+          aria-expanded="true"
+          aria-controls="app-top-nav-body"
+        >
+          <svg class="app-top-nav-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="app-top-nav-toggle-label app-top-nav-toggle-label--expanded">Hide navigation</span>
+          <span class="app-top-nav-toggle-label app-top-nav-toggle-label--collapsed" hidden>Show navigation</span>
+        </button>
+
+        <button
+          type="button"
+          id="scroll-lock-toggle"
+          class="scroll-lock-toggle"
+          aria-pressed="false"
+          aria-label="Lock screen position"
+          title="Lock screen position"
+        >
+          <svg id="scroll-lock-icon-unlock" class="scroll-lock-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 10V8a5 5 0 0 1 9.9-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <svg id="scroll-lock-icon-lock" class="scroll-lock-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" hidden>
+            <rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
+            <path d="M8 10V8a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
 
       <div class="app-top-nav-body" id="app-top-nav-body">
       <nav class="app-page-switch" aria-label="Switch page">
-        <a class="app-page-switch-link is-current" href="#converters" data-page-link="converters" aria-current="page" title="Converters &amp; Calculators">
-          <span class="app-page-switch-text app-page-switch-text--long">Converters &amp; Calculators</span>
-          <span class="app-page-switch-text app-page-switch-text--short">Converters</span>
+        <a class="app-page-switch-link is-current" href="#converters" data-page-link="converters" aria-current="page" title="Construction Converters &amp; Calculators">
+          <span class="app-page-switch-text app-page-switch-text--long">Construction Converters &amp; Calculators</span>
+          <span class="app-page-switch-text app-page-switch-text--short">Construction</span>
         </a>
         <a class="app-page-switch-link" href="#survey" data-page-link="survey" title="Survey Tools &amp; Plane Adjustments">
           <span class="app-page-switch-text app-page-switch-text--long">Survey Tools &amp; Plane Adjustments</span>
           <span class="app-page-switch-text app-page-switch-text--short">Survey Tools</span>
         </a>
+        <a class="app-page-switch-link" href="#convenience" data-page-link="convenience" title="Convenience Converters">
+          <span class="app-page-switch-text app-page-switch-text--long">Convenience Converters</span>
+          <span class="app-page-switch-text app-page-switch-text--short">Convenience</span>
+        </a>
       </nav>
 
       <nav class="app-nav" id="nav-converters" aria-label="Jump to section">
         <div class="app-nav-links">
-          <a class="app-nav-link" href="#converter-grid">Length</a>
+          <a class="app-nav-link" href="#distance-converter-heading">Length</a>
+          <a class="app-nav-link" href="#slope-converter-heading">Slope</a>
           <a class="app-nav-link" href="#area-converter-heading">Area</a>
           <a class="app-nav-link" href="#volume-converter-heading">Volume</a>
           <a class="app-nav-link" href="#construction-calc-heading">Calculator</a>
           <a class="app-nav-link" href="#pythagorean-heading">Shapes</a>
           <a class="app-nav-link app-nav-link--page" href="#survey" data-page-link="survey">Survey Tools</a>
+          <a class="app-nav-link app-nav-link--page" href="#convenience" data-page-link="convenience">Convenience</a>
+        </div>
+        <button type="button" class="app-nav-link app-nav-link--feedback" data-feedback-link>
+          <span class="app-nav-link-text app-nav-link-text--long">Provide Feedback</span>
+          <span class="app-nav-link-text app-nav-link-text--short">Feedback</span>
+        </button>
+      </nav>
+
+      <nav class="app-nav" id="nav-convenience" aria-label="Jump to section" hidden aria-hidden="true">
+        <div class="app-nav-links">
+          <a class="app-nav-link app-nav-link--page" href="#converters" data-page-link="converters">Converters</a>
+          <a class="app-nav-link app-nav-link--page" href="#survey" data-page-link="survey">Survey Tools</a>
+          <a class="app-nav-link" href="#temperature-converter-heading">Temperature</a>
+          <a class="app-nav-link" href="#travel-distance-converter-heading">Travel</a>
+          <a class="app-nav-link" href="#cooking-fluid-converter-heading">Fluids</a>
+          <a class="app-nav-link" href="#cooking-weight-converter-heading">Weight</a>
+          <a class="app-nav-link" href="#data-size-converter-heading">Data</a>
         </div>
         <button type="button" class="app-nav-link app-nav-link--feedback" data-feedback-link>
           <span class="app-nav-link-text app-nav-link-text--long">Provide Feedback</span>
@@ -84,6 +101,7 @@
           <a class="app-nav-link app-nav-link--page" href="#converters" data-page-link="converters">Converters</a>
           <a class="app-nav-link" href="#point-distance-heading">Distance</a>
           <a class="app-nav-link" href="#plane-grade-heading">Plane</a>
+          <a class="app-nav-link app-nav-link--page" href="#convenience" data-page-link="convenience">Convenience</a>
         </div>
         <button type="button" class="app-nav-link app-nav-link--feedback" data-feedback-link>
           <span class="app-nav-link-text app-nav-link-text--long">Provide Feedback</span>
@@ -94,7 +112,26 @@
     </div>
 
     <div id="page-converters" class="app-page" data-page="converters">
-    <main class="converter-grid" id="converter-grid">
+    <section class="distance-converter-section" aria-labelledby="distance-converter-heading">
+      <div class="section-header">
+        <div>
+          <h2 id="distance-converter-heading">Dynamic Distance Converter</h2>
+          <p class="section-subtitle">Enter any format — all others update instantly.</p>
+        </div>
+        <div class="precision-control">
+          <label for="precision">Fraction precision</label>
+          <select id="precision">
+            <option value="2">1/2″</option>
+            <option value="4">1/4″</option>
+            <option value="8">1/8″</option>
+            <option value="16" selected>1/16″</option>
+            <option value="32">1/32″</option>
+            <option value="64">1/64″</option>
+          </select>
+        </div>
+      </div>
+
+    <div class="converter-grid" id="converter-grid">
       <section class="measure-row measure-row--meters" data-field="meters">
         <div class="measure-label">
           <span class="measure-name">Meters</span>
@@ -189,7 +226,64 @@
           <span class="unit">in</span>
         </div>
       </section>
-    </main>
+    </div>
+    </section>
+
+    <section class="slope-converter-section" aria-labelledby="slope-converter-heading">
+      <div class="section-header">
+        <div>
+          <h2 id="slope-converter-heading">Dynamic Slope Converter</h2>
+          <p class="section-subtitle">Enter percent grade, rise:run ratio, or degrees — all others update instantly.</p>
+        </div>
+      </div>
+
+      <div class="converter-grid" id="slope-converter-grid">
+        <section class="measure-row" data-field="percent">
+          <div class="measure-label">
+            <span class="measure-name">Percent Grade</span>
+            <span class="measure-hint">Rise ÷ run × 100 · e.g. 2 for 2%</span>
+          </div>
+          <div class="measure-input-wrap">
+            <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                   id="input-slope-percent" aria-label="Percent grade" placeholder="e.g. 2">
+            <span class="unit">%</span>
+          </div>
+        </section>
+
+        <section class="measure-row" data-field="ratio">
+          <div class="measure-label">
+            <span class="measure-name">Ratio (rise : run)</span>
+            <span class="measure-hint">e.g. 4:12 roof pitch · 1:48 drainage</span>
+          </div>
+          <div class="measure-input-wrap">
+            <input type="text" autocomplete="off" spellcheck="false"
+                   id="input-slope-ratio" aria-label="Slope ratio" placeholder="e.g. 4:12">
+            <span class="unit">rise:run</span>
+          </div>
+        </section>
+
+        <section class="measure-row" data-field="degrees">
+          <div class="measure-label">
+            <span class="measure-name">Degrees</span>
+            <span class="measure-hint">Angle from horizontal</span>
+          </div>
+          <div class="measure-input-wrap">
+            <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                   id="input-slope-degrees" aria-label="Slope degrees" placeholder="e.g. 1.15">
+            <span class="unit">°</span>
+          </div>
+        </section>
+      </div>
+
+      <details class="slope-diagram-wrap" id="slope-diagram-wrap" hidden>
+        <summary class="slope-diagram-summary">Slope diagram</summary>
+        <div class="slope-diagram-panel">
+          <svg class="slope-diagram" id="slope-diagram" viewBox="0 0 320 168" role="img" aria-label="Slope rise and run diagram"></svg>
+        </div>
+      </details>
+
+      <p id="slope-status-line" class="status-line" hidden></p>
+    </section>
 
     <section class="area-converter-section" aria-labelledby="area-converter-heading">
       <div class="section-header">
@@ -620,9 +714,422 @@
           <li><strong>Calculator (Standard):</strong> plain decimal numbers — no units, no converter export</li>
           <li><strong>Calculator (Tip):</strong> enter check amount and tip % for total, or max spend to find the highest tip within budget</li>
           <li><strong>Shape calculators:</strong> right triangle or circle — decimal feet or meters, or feet/inches like <code>3&#39;-4 1/2&quot;</code></li>
+          <li><strong>Slope:</strong> percent grade (<code>2</code> or <code>2%</code>), ratio (<code>4:12</code>, <code>1:48</code>), or degrees (<code>1.15</code> or <code>1.15°</code>)</li>
         </ul>
       </details>
     </footer>
+    </div>
+
+    <div id="page-convenience" class="app-page" data-page="convenience" hidden aria-hidden="true">
+      <section class="convenience-intro-section" aria-labelledby="convenience-intro-heading">
+        <div class="section-header">
+          <div>
+            <h2 id="convenience-intro-heading">Convenience Converters</h2>
+            <p class="section-subtitle">Everyday unit swaps — enter any value and the rest update instantly.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="convenience-converter-section" aria-labelledby="temperature-converter-heading">
+        <div class="section-header">
+          <div>
+            <h2 id="temperature-converter-heading">Temperature</h2>
+            <p class="section-subtitle">Celsius, Fahrenheit, and Kelvin.</p>
+          </div>
+        </div>
+
+        <div class="converter-grid" id="temperature-converter-grid">
+          <section class="measure-row" data-field="celsius">
+            <div class="measure-label">
+              <span class="measure-name">Celsius</span>
+              <span class="measure-hint">Decimal · °C</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-temp-celsius" aria-label="Celsius">
+              <span class="unit">°C</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="fahrenheit">
+            <div class="measure-label">
+              <span class="measure-name">Fahrenheit</span>
+              <span class="measure-hint">Decimal · °F</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-temp-fahrenheit" aria-label="Fahrenheit">
+              <span class="unit">°F</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="kelvin">
+            <div class="measure-label">
+              <span class="measure-name">Kelvin</span>
+              <span class="measure-hint">Decimal · K</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-temp-kelvin" aria-label="Kelvin">
+              <span class="unit">K</span>
+            </div>
+          </section>
+        </div>
+
+        <p id="temperature-status-line" class="status-line" hidden></p>
+      </section>
+
+      <section class="convenience-converter-section" aria-labelledby="travel-distance-converter-heading">
+        <div class="section-header">
+          <div>
+            <h2 id="travel-distance-converter-heading">Travel Distance</h2>
+            <p class="section-subtitle">Road miles, kilometers, and nautical miles.</p>
+          </div>
+        </div>
+
+        <div class="converter-grid" id="travel-distance-converter-grid">
+          <section class="measure-row" data-field="miles">
+            <div class="measure-label">
+              <span class="measure-name">Miles</span>
+              <span class="measure-hint">Statute miles</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-travel-miles" aria-label="Miles">
+              <span class="unit">mi</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="kilometers">
+            <div class="measure-label">
+              <span class="measure-name">Kilometers</span>
+              <span class="measure-hint">Decimal</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-travel-kilometers" aria-label="Kilometers">
+              <span class="unit">km</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="nauticalMiles">
+            <div class="measure-label">
+              <span class="measure-name">Nautical Miles</span>
+              <span class="measure-hint">1 nmi = 1.852 km</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-travel-nautical-miles" aria-label="Nautical miles">
+              <span class="unit">nmi</span>
+            </div>
+          </section>
+        </div>
+
+        <p id="travel-distance-status-line" class="status-line" hidden></p>
+      </section>
+
+      <section class="convenience-converter-section" aria-labelledby="cooking-fluid-converter-heading">
+        <div class="section-header">
+          <div>
+            <h2 id="cooking-fluid-converter-heading">Cooking — Fluids</h2>
+            <p class="section-subtitle">US customary kitchen measures and metric volume.</p>
+          </div>
+        </div>
+
+        <div class="converter-grid" id="cooking-fluid-converter-grid">
+          <section class="measure-row" data-field="milliliters">
+            <div class="measure-label">
+              <span class="measure-name">Milliliters</span>
+              <span class="measure-hint">Decimal</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-fluid-ml" aria-label="Milliliters">
+              <span class="unit">mL</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="teaspoons">
+            <div class="measure-label">
+              <span class="measure-name">Teaspoons</span>
+              <span class="measure-hint">US · 3 tsp = 1 tbsp</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-fluid-tsp" aria-label="Teaspoons">
+              <span class="unit">tsp</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="tablespoons">
+            <div class="measure-label">
+              <span class="measure-name">Tablespoons</span>
+              <span class="measure-hint">US · 16 tbsp = 1 cup</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-fluid-tbsp" aria-label="Tablespoons">
+              <span class="unit">tbsp</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="fluidOunces">
+            <div class="measure-label">
+              <span class="measure-name">Fluid Ounces</span>
+              <span class="measure-hint">US · 8 fl oz = 1 cup</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-fluid-fl-oz" aria-label="Fluid ounces">
+              <span class="unit">fl oz</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="cups">
+            <div class="measure-label">
+              <span class="measure-name">Cups</span>
+              <span class="measure-hint">US · 2 cups = 1 pint</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-fluid-cups" aria-label="Cups">
+              <span class="unit">cup</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="pints">
+            <div class="measure-label">
+              <span class="measure-name">Pints</span>
+              <span class="measure-hint">US liquid · 2 pt = 1 qt</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-fluid-pints" aria-label="Pints">
+              <span class="unit">pt</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="quarts">
+            <div class="measure-label">
+              <span class="measure-name">Quarts</span>
+              <span class="measure-hint">US liquid · 4 qt = 1 gal</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-fluid-quarts" aria-label="Quarts">
+              <span class="unit">qt</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="liters">
+            <div class="measure-label">
+              <span class="measure-name">Liters</span>
+              <span class="measure-hint">Decimal</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-fluid-liters" aria-label="Liters">
+              <span class="unit">L</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="gallons">
+            <div class="measure-label">
+              <span class="measure-name">Gallons</span>
+              <span class="measure-hint">US liquid</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-fluid-gallons" aria-label="Gallons">
+              <span class="unit">gal</span>
+            </div>
+          </section>
+        </div>
+
+        <p id="cooking-fluid-status-line" class="status-line" hidden></p>
+      </section>
+
+      <section class="convenience-converter-section" aria-labelledby="cooking-weight-converter-heading">
+        <div class="section-header">
+          <div>
+            <h2 id="cooking-weight-converter-heading">Cooking — Weight</h2>
+            <p class="section-subtitle">Grams, kilograms, ounces, and pounds.</p>
+          </div>
+        </div>
+
+        <div class="converter-grid" id="cooking-weight-converter-grid">
+          <section class="measure-row" data-field="grams">
+            <div class="measure-label">
+              <span class="measure-name">Grams</span>
+              <span class="measure-hint">Decimal</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-weight-grams" aria-label="Grams">
+              <span class="unit">g</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="kilograms">
+            <div class="measure-label">
+              <span class="measure-name">Kilograms</span>
+              <span class="measure-hint">Decimal</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-weight-kg" aria-label="Kilograms">
+              <span class="unit">kg</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="ounces">
+            <div class="measure-label">
+              <span class="measure-name">Ounces</span>
+              <span class="measure-hint">Avoirdupois · 16 oz = 1 lb</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-weight-oz" aria-label="Ounces">
+              <span class="unit">oz</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="pounds">
+            <div class="measure-label">
+              <span class="measure-name">Pounds</span>
+              <span class="measure-hint">Avoirdupois</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-cooking-weight-lb" aria-label="Pounds">
+              <span class="unit">lb</span>
+            </div>
+          </section>
+        </div>
+
+        <p id="cooking-weight-status-line" class="status-line" hidden></p>
+      </section>
+
+      <section class="convenience-converter-section" aria-labelledby="data-size-converter-heading">
+        <div class="section-header">
+          <div>
+            <h2 id="data-size-converter-heading">Data Size</h2>
+            <p class="section-subtitle">Decimal (1000) and binary (1024) byte units — labels show which is which.</p>
+          </div>
+        </div>
+
+        <div class="converter-grid" id="data-size-converter-grid">
+          <section class="measure-row" data-field="bytes">
+            <div class="measure-label">
+              <span class="measure-name">Bytes</span>
+              <span class="measure-hint">Base unit · B</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-data-size-bytes" aria-label="Bytes">
+              <span class="unit">B</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="kilobytes">
+            <div class="measure-label">
+              <span class="measure-name">Kilobytes</span>
+              <span class="measure-hint">Decimal · 1 KB = 1,000 B</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-data-size-kb" aria-label="Kilobytes decimal">
+              <span class="unit">KB</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="megabytes">
+            <div class="measure-label">
+              <span class="measure-name">Megabytes</span>
+              <span class="measure-hint">Decimal · 1 MB = 1,000 KB</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-data-size-mb" aria-label="Megabytes decimal">
+              <span class="unit">MB</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="gigabytes">
+            <div class="measure-label">
+              <span class="measure-name">Gigabytes</span>
+              <span class="measure-hint">Decimal · 1 GB = 1,000 MB</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-data-size-gb" aria-label="Gigabytes decimal">
+              <span class="unit">GB</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="terabytes">
+            <div class="measure-label">
+              <span class="measure-name">Terabytes</span>
+              <span class="measure-hint">Decimal · 1 TB = 1,000 GB</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-data-size-tb" aria-label="Terabytes decimal">
+              <span class="unit">TB</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="kibibytes">
+            <div class="measure-label">
+              <span class="measure-name">Kibibytes</span>
+              <span class="measure-hint">Binary · 1 KiB = 1,024 B</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-data-size-kib" aria-label="Kibibytes">
+              <span class="unit">KiB</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="mebibytes">
+            <div class="measure-label">
+              <span class="measure-name">Mebibytes</span>
+              <span class="measure-hint">Binary · 1 MiB = 1,024 KiB</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-data-size-mib" aria-label="Mebibytes">
+              <span class="unit">MiB</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="gibibytes">
+            <div class="measure-label">
+              <span class="measure-name">Gibibytes</span>
+              <span class="measure-hint">Binary · 1 GiB = 1,024 MiB</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-data-size-gib" aria-label="Gibibytes">
+              <span class="unit">GiB</span>
+            </div>
+          </section>
+
+          <section class="measure-row" data-field="tebibytes">
+            <div class="measure-label">
+              <span class="measure-name">Tebibytes</span>
+              <span class="measure-hint">Binary · 1 TiB = 1,024 GiB</span>
+            </div>
+            <div class="measure-input-wrap">
+              <input type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                     id="input-data-size-tib" aria-label="Tebibytes">
+              <span class="unit">TiB</span>
+            </div>
+          </section>
+        </div>
+
+        <p id="data-size-status-line" class="status-line" hidden></p>
+      </section>
     </div>
 
     <div id="page-survey" class="app-page" data-page="survey" hidden aria-hidden="true">
@@ -1060,30 +1567,6 @@
     </div>
   </div>
 
-  <div class="scroll-lock-float" id="scroll-lock-float">
-    <p class="scroll-lock-float-label" id="scroll-lock-label" aria-live="polite">
-      <span class="scroll-lock-float-label-text scroll-lock-float-label-text--idle">Lock view</span>
-      <span class="scroll-lock-float-label-text scroll-lock-float-label-text--locked" hidden>Locked — tap to unlock</span>
-    </p>
-    <button
-      type="button"
-      id="scroll-lock-toggle"
-      class="scroll-lock-toggle"
-      aria-pressed="false"
-      aria-label="Lock screen position"
-      title="Lock screen position"
-    >
-      <svg id="scroll-lock-icon-unlock" class="scroll-lock-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M7 10V8a5 5 0 0 1 9.9-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
-      </svg>
-      <svg id="scroll-lock-icon-lock" class="scroll-lock-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" hidden>
-        <rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
-        <path d="M8 10V8a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </button>
-  </div>
-
   <script type="importmap">
   {
     "imports": {
@@ -1101,8 +1584,10 @@
   <script src="js/example-data.js?v=6"></script>
   <script src="js/tape-measure.js"></script>
   <script src="js/converter.js"></script>
+  <script src="js/slope-converter.js"></script>
   <script src="js/area-converter.js"></script>
   <script src="js/volume-converter.js"></script>
+  <script src="js/convenience-converters.js"></script>
   <script src="js/construction-calculator.js"></script>
   <script src="js/pythagorean-calculator.js?v=4"></script>
   <script type="module" src="js/point-distance.js"></script>

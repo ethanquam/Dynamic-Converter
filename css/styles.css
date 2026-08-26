@@ -85,7 +85,7 @@ body {
 
 .app-page-switch {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.35rem;
   margin: -0.75rem 0 0;
   padding: 0.35rem;
@@ -153,102 +153,101 @@ body {
   display: none;
 }
 
-.scroll-lock-float {
-  position: fixed;
-  right: max(1rem, env(safe-area-inset-right));
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  z-index: 30;
+.app-top-nav-bar {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.45rem;
-  pointer-events: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  padding: 0.45rem 0.55rem;
+  box-sizing: border-box;
+  background: rgba(236, 238, 237, 0.94);
+  backdrop-filter: blur(8px);
 }
 
-.scroll-lock-float > * {
-  pointer-events: auto;
-}
-
-.scroll-lock-float-label {
+body.is-scroll-locked .app-top-nav {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 100;
+  width: min(980px, 100%);
   margin: 0;
-  padding: 0.42rem 0.7rem;
-  font-size: 0.72rem;
-  font-weight: 650;
-  letter-spacing: 0.02em;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  box-shadow: 0 2px 12px rgba(26, 36, 32, 0.12);
+  padding-top: env(safe-area-inset-top, 0);
+  padding-left: max(1.25rem, env(safe-area-inset-left));
+  padding-right: max(1.25rem, env(safe-area-inset-right));
+  background: rgba(236, 238, 237, 0.98);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 14px rgba(26, 36, 32, 0.1);
+  transform: translateX(-50%);
+  max-height: min(70vh, 100dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
-.scroll-lock-float-label-text--locked {
-  color: var(--accent-dim);
-}
-
-.scroll-lock-float.is-locked .scroll-lock-float-label {
-  background: rgba(107, 143, 88, 0.12);
-  border-color: var(--accent-dim);
-  box-shadow: 0 0 0 2px rgba(82, 122, 66, 0.18);
+body.is-scroll-locked .app-top-nav-bar {
+  position: relative;
+  top: auto;
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .scroll-lock-toggle {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 2.125rem;
+  height: 2.125rem;
   padding: 0;
   color: var(--accent-dim);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 4px 18px rgba(26, 36, 32, 0.16);
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, transform 0.15s;
 }
 
 .scroll-lock-toggle:hover {
   border-color: var(--accent-dim);
-  transform: translateY(-1px);
 }
 
 .scroll-lock-toggle:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
 .scroll-lock-toggle:active {
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
 .scroll-lock-icon {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.scroll-lock-toggle svg[hidden] {
+  display: none !important;
 }
 
 .scroll-lock-toggle.is-locked {
   color: var(--text-on-accent);
   background: var(--accent-dim);
   border-color: var(--accent-dim);
-  box-shadow:
-    0 0 0 3px rgba(107, 143, 88, 0.28),
-    0 4px 18px rgba(26, 36, 32, 0.2);
+  box-shadow: 0 0 0 2px rgba(107, 143, 88, 0.22);
   animation: scroll-lock-pulse 1.8s ease-in-out infinite;
 }
 
 @keyframes scroll-lock-pulse {
   0%,
   100% {
-    box-shadow:
-      0 0 0 3px rgba(107, 143, 88, 0.28),
-      0 4px 18px rgba(26, 36, 32, 0.2);
+    box-shadow: 0 0 0 2px rgba(107, 143, 88, 0.22);
   }
 
   50% {
-    box-shadow:
-      0 0 0 6px rgba(107, 143, 88, 0.16),
-      0 4px 18px rgba(26, 36, 32, 0.2);
+    box-shadow: 0 0 0 5px rgba(107, 143, 88, 0.12);
   }
 }
 
@@ -309,16 +308,126 @@ body.is-scroll-locked {
 }
 
 .volume-converter-section,
+.slope-converter-section,
 .area-converter-section {
   margin-top: 2.5rem;
   padding-top: 2rem;
   border-top: 1px solid var(--border);
 }
 
+.convenience-intro-section {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.convenience-converter-section {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.convenience-converter-section .status-line {
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}
+
 .volume-converter-section .status-line,
+.slope-converter-section .status-line,
+.slope-converter-section .slope-diagram-wrap,
 .area-converter-section .status-line {
   margin-top: 0.75rem;
   margin-bottom: 0;
+}
+
+.slope-diagram-wrap {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.slope-diagram-summary {
+  font-size: 0.72rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.slope-diagram-summary::-webkit-details-marker {
+  display: none;
+}
+
+.slope-diagram-summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.4rem;
+  font-size: 0.85rem;
+  transition: transform 0.15s ease;
+}
+
+.slope-diagram-wrap[open] .slope-diagram-summary::before {
+  transform: rotate(90deg);
+}
+
+.slope-diagram-wrap[open] .slope-diagram-summary {
+  margin-bottom: 0.5rem;
+}
+
+.slope-diagram-panel {
+  padding: 0.35rem 0.25rem 0.15rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.slope-diagram {
+  display: block;
+  width: 100%;
+  max-width: 24rem;
+  height: auto;
+  margin-inline: auto;
+  overflow: visible;
+}
+
+.slope-diagram-label,
+.slope-diagram-value,
+.slope-diagram-angle {
+  pointer-events: none;
+}
+
+.slope-diagram-label {
+  fill: var(--text-muted);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.slope-diagram-value {
+  fill: var(--accent-dim);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+.slope-diagram-panel .slope-diagram-value {
+  font-size: clamp(10px, 2.8vw, 12px);
+}
+
+.slope-diagram-angle {
+  fill: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--mono);
 }
 
 .construction-calc-section {
@@ -630,6 +739,10 @@ body.is-scroll-locked {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+
+.calc-tip-presets[hidden] {
+  display: none !important;
 }
 
 .calc-tip-presets-label {
@@ -1682,7 +1795,7 @@ body.is-scroll-locked {
   border-top: 1px solid var(--border);
 }
 
-.app-nav + .point-distance-section {
+.app-page > .point-distance-section:first-child {
   margin-top: 0;
   padding-top: 0;
   border-top: none;
@@ -3039,6 +3152,10 @@ body.is-feedback-open {
 }
 
 #converter-grid,
+.distance-converter-section,
+.convenience-intro-section,
+.convenience-converter-section,
+.slope-converter-section,
 .area-converter-section,
 .volume-converter-section,
 .construction-calc-section,
@@ -3102,25 +3219,43 @@ body.is-feedback-open {
     display: none;
   }
 
+  .app-top-nav-bar {
+    border-bottom: 1px solid var(--border);
+    padding: 0.45rem 0.55rem;
+    padding-top: max(0.45rem, env(safe-area-inset-top));
+  }
+
+  .app-top-nav.is-collapsed .app-top-nav-bar {
+    border-bottom: none;
+  }
+
   .app-top-nav-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex: 0 1 auto;
     gap: 0.35rem;
-    width: 100%;
-    min-height: 2.75rem;
-    padding: 0.55rem 0.85rem;
-    padding-top: max(0.55rem, env(safe-area-inset-top));
+    min-height: 2.125rem;
+    padding: 0.35rem;
     font: inherit;
     font-size: 0.78rem;
     font-weight: 650;
     color: var(--text-muted);
     background: transparent;
     border: none;
-    border-bottom: 1px solid var(--border);
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
+  }
+
+  .scroll-lock-toggle {
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+
+  .scroll-lock-icon {
+    width: 1.05rem;
+    height: 1.05rem;
   }
 
   .app-top-nav.is-collapsed .app-top-nav-toggle {
@@ -3152,9 +3287,17 @@ body.is-feedback-open {
   }
 
   .app-page-switch-link {
-    padding: 0.6rem 0.5rem;
+    padding: 0.6rem 0.35rem;
     font-size: 0.78rem;
     min-height: 2.75rem;
+  }
+
+  .app-page-switch-text--long {
+    display: none;
+  }
+
+  .app-page-switch-text--short {
+    display: inline;
   }
 
   .app-nav {
@@ -3215,6 +3358,10 @@ body.is-feedback-open {
   }
 
   #converter-grid,
+  .distance-converter-section,
+  .convenience-intro-section,
+  .convenience-converter-section,
+  .slope-converter-section,
   .area-converter-section,
   .volume-converter-section,
   .construction-calc-section,
@@ -3264,6 +3411,8 @@ body.is-feedback-open {
     min-height: 2.75rem;
   }
 
+  .convenience-converter-section,
+  .slope-converter-section,
   .area-converter-section,
   .volume-converter-section,
   .construction-calc-section,
@@ -3273,6 +3422,13 @@ body.is-feedback-open {
   .plane-grade-section {
     margin-top: 1.75rem;
     padding-top: 1.5rem;
+  }
+
+  .app-page > .point-distance-section:first-child,
+  .app-page > .convenience-intro-section:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
   }
 
   .pythagorean-layout {
@@ -3500,6 +3656,12 @@ body.is-feedback-open {
   }
 
   .tape-measure-summary {
+    min-height: 2.75rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .slope-diagram-summary {
     min-height: 2.75rem;
     display: flex;
     align-items: center;
@@ -3813,8 +3975,25 @@ body.is-feedback-open {
   }
 
   .unit {
-    min-width: 3.25rem;
+    min-width: 0;
+    max-width: 4.75rem;
     font-size: 0.75rem;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+  }
+
+  .calc-keypad--imperial .calc-key {
+    min-height: 2.85rem;
+    font-size: 0.92rem;
+    padding: 0.35rem 0.2rem;
+  }
+
+  .calc-keypad--imperial .calc-key--unit {
+    font-size: 0.76rem;
+  }
+
+  .calc-keypad--imperial .calc-key--op {
+    font-size: 1rem;
   }
 
   .measure-hint {

@@ -16,7 +16,18 @@
   function currentPageLabel() {
     const hash = (location.hash || "#converters").replace(/^#/, "").toLowerCase();
     const surveyHashes = new Set(["survey", "point-distance-heading", "plane-grade-heading"]);
-    return surveyHashes.has(hash) ? "Survey Tools" : "Converters & Calculators";
+    const convenienceHashes = new Set([
+      "convenience",
+      "convenience-intro-heading",
+      "temperature-converter-heading",
+      "travel-distance-converter-heading",
+      "cooking-fluid-converter-heading",
+      "cooking-weight-converter-heading",
+      "data-size-converter-heading",
+    ]);
+    if (surveyHashes.has(hash)) return "Survey Tools";
+    if (convenienceHashes.has(hash)) return "Convenience Converters";
+    return "Construction Converters & Calculators";
   }
 
   function setStatus(message, isError) {

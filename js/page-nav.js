@@ -1,32 +1,69 @@
 (function () {
   "use strict";
 
-  const SURVEY_HASHES = new Set([
-    "survey",
-    "point-distance-heading",
-    "plane-grade-heading",
-  ]);
+  const PAGE_DEFAULT_HASH = {
+    converters: "converters",
+    convenience: "convenience",
+    survey: "survey",
+  };
+
+  const PAGE_HASHES = {
+    converters: new Set([
+      "converters",
+      "distance-converter-heading",
+      "slope-converter-heading",
+      "area-converter-heading",
+      "volume-converter-heading",
+      "construction-calc-heading",
+      "pythagorean-heading",
+    ]),
+    convenience: new Set([
+      "convenience",
+      "convenience-intro-heading",
+      "temperature-converter-heading",
+      "travel-distance-converter-heading",
+      "cooking-fluid-converter-heading",
+      "cooking-weight-converter-heading",
+      "data-size-converter-heading",
+    ]),
+    survey: new Set(["survey", "point-distance-heading", "plane-grade-heading"]),
+  };
 
   function pageElements() {
     return {
       converters: {
         page: document.getElementById("page-converters"),
-        header: document.getElementById("header-converters"),
+        header: null,
+        sectionHeadingId: "distance-converter-heading",
         nav: document.getElementById("nav-converters"),
-        title: "Dynamic Converter v1",
+        title: "Construction Converters & Calculators · Dynamic Converter v1",
+      },
+      convenience: {
+        page: document.getElementById("page-convenience"),
+        header: null,
+        sectionHeadingId: "convenience-intro-heading",
+        nav: document.getElementById("nav-convenience"),
+        title: "Convenience Converters · Dynamic Converter v1",
       },
       survey: {
         page: document.getElementById("page-survey"),
-        header: document.getElementById("header-survey"),
+        header: null,
+        sectionHeadingId: "point-distance-heading",
         nav: document.getElementById("nav-survey"),
         title: "Survey Tools & Plane Adjustments · Dynamic Converter v1",
       },
     };
   }
 
+  function pageForHash(hash) {
+    if (PAGE_HASHES.survey.has(hash)) return "survey";
+    if (PAGE_HASHES.convenience.has(hash)) return "convenience";
+    return "converters";
+  }
+
   function currentPageName() {
     const hash = (location.hash || "#converters").replace(/^#/, "").toLowerCase();
-    return SURVEY_HASHES.has(hash) ? "survey" : "converters";
+    return pageForHash(hash);
   }
 
   function setVisible(element, visible) {
@@ -59,14 +96,16 @@
 
     document.title = config.title;
 
-    const heading = config.header?.querySelector("h1");
+    const heading =
+      config.header?.querySelector("h1") ||
+      (config.sectionHeadingId && document.getElementById(config.sectionHeadingId));
     if (heading) {
       heading.setAttribute("tabindex", "-1");
       heading.focus({ preventScroll: true });
     }
 
     if (options.updateHash !== false) {
-      const targetHash = `#${name === "survey" ? "survey" : "converters"}`;
+      const targetHash = `#${PAGE_DEFAULT_HASH[name] || PAGE_DEFAULT_HASH.converters}`;
       if (location.hash !== targetHash) {
         history.replaceState(null, "", targetHash);
       }
@@ -87,17 +126,22 @@
 
     const href = sectionLink.getAttribute("href");
     const hash = href.replace(/^#/, "").toLowerCase();
-    if (!SURVEY_HASHES.has(hash)) return;
+    const targetPage = pageForHash(hash);
 
-    event.preventDefault();
-
-    if (hash === "survey") {
-      showPage("survey", { updateHash: true });
+    if (hash === PAGE_DEFAULT_HASH.converters || hash === PAGE_DEFAULT_HASH.convenience || hash === PAGE_DEFAULT_HASH.survey) {
+      event.preventDefault();
+      showPage(targetPage, { updateHash: true });
       return;
     }
 
-    if (currentPageName() !== "survey") {
-      showPage("survey", { updateHash: false });
+    if (!PAGE_HASHES.survey.has(hash) && !PAGE_HASHES.convenience.has(hash) && !PAGE_HASHES.converters.has(hash)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (currentPageName() !== targetPage) {
+      showPage(targetPage, { updateHash: false });
     }
 
     if (location.hash !== href) {

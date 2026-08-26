@@ -157,6 +157,7 @@
     }
     if (tipPresetsEl) {
       tipPresetsEl.hidden = !forward;
+      tipPresetsEl.setAttribute("aria-hidden", forward ? "false" : "true");
     }
   }
 

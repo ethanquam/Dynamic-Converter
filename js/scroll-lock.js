@@ -3,9 +3,6 @@
 
   const STORAGE_KEY = "dynamic-converter-scroll-lock";
   const toggleBtn = document.getElementById("scroll-lock-toggle");
-  const floatEl = document.getElementById("scroll-lock-float");
-  const labelIdleEl = document.querySelector(".scroll-lock-float-label-text--idle");
-  const labelLockedEl = document.querySelector(".scroll-lock-float-label-text--locked");
   const iconUnlockEl = document.getElementById("scroll-lock-icon-unlock");
   const iconLockEl = document.getElementById("scroll-lock-icon-lock");
 
@@ -21,16 +18,11 @@
       "aria-label",
       locked ? "Unlock screen position" : "Lock screen position"
     );
-    toggleBtn.title = locked ? "Unlock screen position" : "Lock screen position";
-
-    if (floatEl) {
-      floatEl.classList.toggle("is-locked", locked);
-    }
+    toggleBtn.title = locked
+      ? "Unlock screen position (Escape)"
+      : "Lock screen position";
 
     document.documentElement.classList.toggle("is-scroll-locked", locked);
-
-    if (labelIdleEl) labelIdleEl.hidden = locked;
-    if (labelLockedEl) labelLockedEl.hidden = !locked;
 
     if (iconUnlockEl) iconUnlockEl.hidden = locked;
     if (iconLockEl) iconLockEl.hidden = !locked;
@@ -85,6 +77,9 @@
   window.addEventListener("hashchange", resetLockedViewportTop);
   document.addEventListener("click", (event) => {
     if (!locked) return;
+    if (event.target.closest("#scroll-lock-toggle, #app-top-nav-toggle")) {
+      return;
+    }
     if (event.target.closest("[data-page-link], .app-nav-link[href^='#']")) {
       resetLockedViewportTop();
     }
